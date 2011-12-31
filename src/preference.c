@@ -446,7 +446,7 @@ void hybrid_pref_win_finish(HybridPrefWin *pref_win)
 {
     GdkGeometry geometry = {
         .min_width = 450,
-        .min_height = 300
+        .min_height = -1
     };
     gtk_window_set_geometry_hints(GTK_WINDOW(pref_win->window), NULL,
                                   &geometry, GDK_HINT_MIN_SIZE);
