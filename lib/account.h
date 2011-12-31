@@ -69,33 +69,33 @@ struct _HybridAccount {
 };
 
 enum _HybridAccountVariableType {
-	VARIABLE_TYPE_STRING,
-	VARIABLE_TYPE_BOOLEAN,
-	VARIABLE_TYPE_INTEGER,
+    VARIABLE_TYPE_STRING,
+    VARIABLE_TYPE_BOOLEAN,
+    VARIABLE_TYPE_INTEGER,
 };
 
 struct _HybridAccountVariable {
-	HybridAccountVariableType  type;
-	gchar					  *title;
-	gchar					  *name;
-	gchar					  *str_value;
-	gboolean				   bool_value;
-	gint					   int_value;
-	GtkWidget				  *widget;
+    HybridAccountVariableType  type;
+    gchar                     *title;
+    gchar                     *name;
+    gchar                     *str_value;
+    gboolean                   bool_value;
+    gint                       int_value;
+    GtkWidget                 *widget;
 };
 
 enum {
-	HYBRID_STATE_OFFLINE = 0,
-	HYBRID_STATE_INVISIBLE,
-	HYBRID_STATE_AWAY,
-	HYBRID_STATE_BUSY,
-	HYBRID_STATE_ONLINE
+    HYBRID_STATE_OFFLINE = 0,
+    HYBRID_STATE_INVISIBLE,
+    HYBRID_STATE_AWAY,
+    HYBRID_STATE_BUSY,
+    HYBRID_STATE_ONLINE
 };
 
 enum _HybridConnectionStatusType {
-	HYBRID_CONNECTION_CONNECTING,
-	HYBRID_CONNECTION_CONNECTED,
-	HYBRID_CONNECTION_CLOSED
+    HYBRID_CONNECTION_CONNECTING,
+    HYBRID_CONNECTION_CONNECTED,
+    HYBRID_CONNECTION_CLOSED
 };
 
 #define HYBRID_IS_CONNECTING(h) ((h)->connect_state == HYBRID_CONNECTION_CONNECTING)
