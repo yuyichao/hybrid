@@ -239,7 +239,7 @@ void hybrid_conv_got_status(HybridAccount *account, const gchar *buddy_id,
  * @param auto_stop If TRUE it will set the inputing state to be stoped automaticly.
  */
 void hybrid_conv_got_input(HybridAccount *account, const gchar *buddy_id,
-                              gboolean auto_stop);
+                           gboolean auto_stop);
 
 /**
  * Got an buddy's stopping inputing message.

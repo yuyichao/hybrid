@@ -505,10 +505,12 @@ hybrid_account_create(HybridModule *proto)
 
     HybridAccount *ac = g_new0(HybridAccount, 1);
 
-    ac->buddy_list  = g_hash_table_new_full(g_str_hash, g_str_equal,
-            NULL, (GDestroyNotify)hybrid_blist_buddy_destroy);
-    ac->group_list  = g_hash_table_new_full(g_str_hash, g_str_equal,
-            NULL, (GDestroyNotify)hybrid_blist_group_destroy);
+    ac->buddy_list  = g_hash_table_new_full(g_str_hash, g_str_equal, NULL,
+                                            (GDestroyNotify)
+                                            hybrid_blist_buddy_destroy);
+    ac->group_list  = g_hash_table_new_full(g_str_hash, g_str_equal, NULL,
+                                            (GDestroyNotify)
+                                            hybrid_blist_group_destroy);
     ac->config      = global_config;
     ac->proto       = proto;
     ac->status_text = NULL;

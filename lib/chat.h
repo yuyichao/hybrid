@@ -21,14 +21,41 @@
 #ifndef HYBRID_CHAT_H
 #define HYBRID_CHAT_H
 
+typedef struct _HybridSession HybridSession;
+
 /* Do not put Multi-sender/receiver support here, */
 /* since plugins shouldn't deal with or be aware of this. */
 typedef struct {
-    HybridAccount *account;
-    const gchar *buddy_id;
+    HybridSession *session;
     const gchar *message;
     time_t time;
     gboolean in;
 } HybridMessage;
+
+typedef enum {
+    HYBRID_NONE,
+    HYBRID_TYPING,
+    HYBRID_STOPPED
+} HybridTypingState;
+
+/* Abstract structure for a chat session */
+/* signals: notify get-message send-message destroy */
+struct _HybridSession {
+    /* For properties and signals. */
+    GObject parent;
+    HybridAccount *account;
+
+    gchar *buddy;
+    gpointer data;
+
+    /* timeout id, to remove session after certain amount of time. */
+    gint timeout;
+
+    /* Properties. */
+    gboolean unread;
+    HybridTypingState type_state;
+    gchar *title;
+};
+
 
 #endif /* HYBRID_CHAT_H */

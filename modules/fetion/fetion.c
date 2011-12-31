@@ -540,9 +540,8 @@ sms_to_me_cb(HybridAction *action)
 
     account = hybrid_action_get_account(action);
 
-    window = hybrid_chat_window_create(
-                account, "000000", HYBRID_CHAT_PANEL_USER_DEFINED
-            );
+    window = hybrid_chat_window_create(account, "000000",
+                                       HYBRID_CHAT_PANEL_USER_DEFINED);
 
     hybrid_chat_window_set_title(window, _("SMS To Me"));
     hybrid_chat_window_set_callback(window, (ChatCallback)sms_to_me_send_cb);
