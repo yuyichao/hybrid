@@ -229,6 +229,7 @@ set(hybrid_SRC
   lib/util.c
   lib/pref.c
   lib/logs.c
+  lib/chat.c
   src/gtkconn.c
   src/gtksound.c
   src/gtkutils.c
