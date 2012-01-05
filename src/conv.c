@@ -51,10 +51,58 @@ static HybridChatTheme theme_list[] = {
     }
 };
 
+static gboolean hybrid_new_session_hook(GSignalInvocationHint *ihint,
+                                        guint n, const GValue *params,
+                                        gpointer data);
+static void hybrid_chat_session_filter(HybridChatSession *session,
+                                       GQuark detail);
+
 static GtkWidget *create_note_label(HybridChatWindow *chat);
 static void chat_window_destroy(HybridChatWindow *chat);
 static gboolean key_press_func(GtkWidget *widget, GdkEventKey *event,
                             HybridConversation *conv);
+
+void hybrid_chat_window_init()
+{
+    g_signal_add_emission_hook(g_signal_lookup("new",
+                                               HYBRID_TYPE_CHAT_SESSION),
+                               0, hybrid_new_session_hook, NULL, NULL);
+}
+
+static gboolean
+hybrid_new_session_hook(GSignalInvocationHint *ihint, guint n,
+                        const GValue *params, gpointer data)
+{
+    hybrid_chat_session_filter(
+        HYBRID_CHAT_SESSION(g_value_get_object(params)), ihint->detail);
+
+    return TRUE;
+}
+
+static void
+hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
+{
+    if (!detail) {
+        hybrid_debug_warning(__func__, "New Session with hint NULL.");
+        goto receive;
+    } else if (detail == g_quark_from_static_string("send")) {
+    send:
+
+    } else if (detail == g_quark_from_static_string("receive")) {
+    receive:
+
+    } else if (detail == g_quark_from_static_string("state")) {
+    state:
+
+    } else if (detail == g_quark_from_static_string("group")) {
+    group:
+
+    } else {
+    unknown:
+
+    }
+}
+
 
 /**
  * Callback function to handle the close button click event.
@@ -1241,9 +1289,10 @@ init_chat_window(HybridChatWindow *chat)
 }
 
 HybridChatWindow*
-hybrid_chat_window_create(HybridAccount *account, const gchar *id,
+hybrid_chat_window_create(HybridChatSession *session,
                           HybridChatWindowType type)
 {
+    HybridAccount      *account = session->account;
     HybridChatWindow   *chat = NULL;
     HybridConversation *conv = NULL;
     HybridBuddy        *buddy;
@@ -1254,7 +1303,7 @@ hybrid_chat_window_create(HybridAccount *account, const gchar *id,
     g_return_val_if_fail(id != NULL, NULL);
 
     if (type == HYBRID_CHAT_PANEL_SYSTEM) {
-        if (!(buddy = (hybrid_blist_find_buddy(account, id)))) {
+        if (!(buddy = (hybrid_blist_find_buddy(account, session->id)))) {
             hybrid_debug_error("conv", "FATAL, can't find buddy");
             return NULL;
         }
@@ -1279,17 +1328,13 @@ hybrid_chat_window_create(HybridAccount *account, const gchar *id,
      * Whether to show the chat dialog in a single window.
      */
     if (hybrid_pref_get_boolean(NULL, "single_chat_window")) {
-
         if (!conv_list) {
             conv = hybrid_conv_create();
             conv_list = g_slist_append(conv_list, conv);
-
         } else {
             conv = conv_list->data;
         }
-
     } else {
-
         conv = hybrid_conv_create();
         conv_list = g_slist_append(conv_list, conv);
     }
@@ -1299,7 +1344,7 @@ hybrid_chat_window_create(HybridAccount *account, const gchar *id,
     chat->parent  = conv;
     chat->account = account;
     chat->type    = type;
-    chat->logs    = hybrid_logs_create(account, id);
+    //chat->logs    = hybrid_logs_create(account, id);
 
     if (type == HYBRID_CHAT_PANEL_SYSTEM) {
         chat->data = buddy;
@@ -1593,15 +1638,14 @@ hybrid_chat_window_set_icon(HybridChatWindow *window, GdkPixbuf *pixbuf)
     model = gtk_cell_view_get_model(GTK_CELL_VIEW(window->tablabel));
     store = GTK_LIST_STORE(model);
 
-    gtk_list_store_set(store, &window->tabiter,
-            TAB_STATUS_ICON_COLUMN, pixbuf,
-            -1);
+    gtk_list_store_set(store, &window->tabiter, TAB_STATUS_ICON_COLUMN,
+                       pixbuf, -1);
 
     model = gtk_cell_view_get_model(GTK_CELL_VIEW(window->tiplabel));
     store = GTK_LIST_STORE(model);
 
     gtk_list_store_set(store, &window->tipiter,
-            BUDDY_ICON_COLUMN, pixbuf, -1);
+                       BUDDY_ICON_COLUMN, pixbuf, -1);
 }
 
 HybridChatWindow*

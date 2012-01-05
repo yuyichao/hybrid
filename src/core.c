@@ -27,6 +27,8 @@
  #include <libnotify/notify.h>
 #endif
 
+#include "init.h"
+#include "conv.h"
 #include "pref.h"
 #include "module.h"
 #include "head.h"
@@ -306,6 +308,9 @@ main(gint argc, gchar **argv)
     hybrid_module_init();
 
     hybrid_account_init();
+
+    hybrid_lib_init();
+    hybrid_chat_window_init();
 
     hybrid_conn_init();
 

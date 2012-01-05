@@ -30,32 +30,32 @@ typedef struct _XmppPresence XmppPresence;
 
 
 struct _XmppPresence {
-	gchar *status;
-	gint show;
-	gchar *full_jid;
+    gchar *status;
+    gint show;
+    gchar *full_jid;
 
-	XmppBuddy *buddy;
+    XmppBuddy *buddy;
 };
 
 struct _XmppBuddy {
-	gchar *jid;
-	gchar *name;
-	gchar *group;
-	gchar *photo;
+    gchar *jid;
+    gchar *name;
+    gchar *group;
+    gchar *photo;
 
-	gchar *subscription;
+    gchar *subscription;
 
-	GSList *presence_list; /* presence list. */
+    GSList *presence_list; /* presence list. */
 
-	XmppStream *stream;
-	HybridBuddy *buddy;
+    XmppStream *stream;
+    HybridBuddy *buddy;
 };
 
 enum {
-	XMPP_PRESENCE_SUBSCRIBE,
-	XMPP_PRESENCE_SUBSCRIBED,
-	XMPP_PRESENCE_UNSUBSCRIBE,
-	XMPP_PRESENCE_UNSUBSCRIBED
+    XMPP_PRESENCE_SUBSCRIBE,
+    XMPP_PRESENCE_SUBSCRIBED,
+    XMPP_PRESENCE_UNSUBSCRIBE,
+    XMPP_PRESENCE_UNSUBSCRIBED
 };
 
 #ifdef __cplusplus
@@ -152,7 +152,7 @@ XmppBuddy *xmpp_buddy_find(XmppAccount *account, const gchar *jid);
  * @param status   The status of the presence.
  */
 void xmpp_buddy_set_status(XmppBuddy *buddy, const gchar *full_jid,
-		const gchar *status);
+                           const gchar *status);
 
 /**
  * Set online status for the buddy.
@@ -162,7 +162,7 @@ void xmpp_buddy_set_status(XmppBuddy *buddy, const gchar *full_jid,
  * @param show     The online status.
  */
 void xmpp_buddy_set_show(XmppBuddy *buddy, const gchar *full_jid,
-		const gchar *show);
+                         const gchar *show);
 
 /**
  * Set group name for the buddy.
@@ -211,7 +211,7 @@ gint xmpp_buddy_alias(XmppBuddy *buddy, const gchar *alias);
  * @return HYBRID_OK or HYBRID_ERROR in case of an error.
  */
 gint xmpp_buddy_get_info(XmppStream *stream, const gchar *jid,
-		trans_callback callback, gpointer user_data);
+                         trans_callback callback, gpointer user_data);
 
 /**
  * Send a presence message to a jabber buddy, the type of the message
@@ -244,7 +244,7 @@ gint xmpp_buddy_delete(XmppBuddy *buddy);
  * @return HYBRID_OK or HYBRID_ERROR in case of an error.
  */
 gint xmpp_roster_add_item(XmppStream *stream, const gchar *jid, const gchar *name,
-		const gchar *group);
+                          const gchar *group);
 
 /**
  * Clear the buddies from the local buddy list.

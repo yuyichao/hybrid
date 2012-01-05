@@ -34,11 +34,6 @@ typedef struct {
     gboolean in;
 } HybridMessage;
 
-HybridMessage *hybrid_message_new(time_t time, gboolean in);
-void hybrid_message_free(HybridMessage *msg);
-gchar *hybrid_message_get_content(HybridMessage *msg);
-void hybrid_message_set_content(HybridMessage *msg, const gchar *content);
-
 typedef enum {
     HYBRID_TYPE_NONE,
     HYBRID_TYPE_TYPING,
@@ -59,7 +54,6 @@ typedef enum {
 #define HYBRID_CHAT_SESSION_GET_CLASS(obj)                              \
     (G_TYPE_INSTANCE_GET_CLASS((obj), HYBRID_TYPE_CHAT_SESSION,         \
                                HybridChatSessionClass))
-
 
 /* Abstract structure for a chat session */
 /* signals: notify get-message send-message destroy */
@@ -85,33 +79,56 @@ struct _HybridChatSessionClass {
     GObjectClass parent_class;
 };
 
-void hybrid_chat_session_init();
 
-HybridChatSession *hybrid_chat_session_new(HybridAccount *account,
-                                           const gchar *id, gboolean in,
-                                           const gchar *first_prop_name, ...);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void hybrid_chat_session_set_unread(HybridChatSession *session,
-                                    gboolean unread);
+    void hybrid_chat_session_init();
 
-gboolean hybrid_chat_session_get_unread(HybridChatSession *session);
+    HybridChatSession* hybrid_chat_session_newv(
+        HybridAccount *account, const gchar *id, gpointer data,
+        const gchar *first_prop_name, va_list var_args);
+    HybridChatSession *hybrid_chat_session_new(
+        HybridAccount *account, const gchar *id, gpointer data,
+        const gchar *first_prop_name, ...);
 
-void hybrid_chat_session_set_self_state(HybridChatSession *session,
-                                        HybridTypeState state);
+    HybridChatSession *hybrid_chat_session_new_default(
+        HybridAccount *account, const gchar *id, const gchar *hint,
+        gpointer data, const gchar *first_prop_name, ...);
 
-HybridTypeState hybrid_chat_session_get_self_state(HybridChatSession *session);
+    void hybrid_chat_session_finish(HybridChatSession *session,
+                                    const gchar *hint);
 
-void hybrid_chat_session_set_buddy_state(HybridChatSession *session,
-                                         HybridTypeState state);
+    void hybrid_chat_session_set_unread(HybridChatSession *session,
+                                        gboolean unread);
+    gboolean hybrid_chat_session_get_unread(HybridChatSession *session);
 
-HybridTypeState hybrid_chat_session_get_buddy_state(HybridChatSession *session);
+    void hybrid_chat_session_set_self_state(HybridChatSession *session,
+                                            HybridTypeState state);
+    HybridTypeState hybrid_chat_session_get_self_state(
+        HybridChatSession *session);
 
-void hybrid_chat_session_set_title(HybridChatSession *session,
-                                   const gchar *title);
+    void hybrid_chat_session_set_buddy_state(HybridChatSession *session,
+                                             HybridTypeState state);
+    HybridTypeState hybrid_chat_session_get_buddy_state(
+        HybridChatSession *session);
 
-gchar *hybrid_chat_session_get_title(HybridChatSession *session);
+    void hybrid_chat_session_set_title(HybridChatSession *session,
+                                       const gchar *title);
+    gchar *hybrid_chat_session_get_title(HybridChatSession *session);
 
-void hybrid_chat_session_got_message(HybridChatSession *session,
-                                     HybridMessage *msg);
+    void hybrid_chat_session_got_message(HybridChatSession *session,
+                                         HybridMessage *msg);
+
+
+    HybridMessage *hybrid_message_new(time_t time, gboolean in);
+    void hybrid_message_free(HybridMessage *msg);
+    gchar *hybrid_message_get_content(HybridMessage *msg);
+    void hybrid_message_set_content(HybridMessage *msg, const gchar *content);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* HYBRID_CHAT_H */

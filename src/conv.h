@@ -26,6 +26,7 @@
 
 #include "account.h"
 #include "blist.h"
+#include "chat.h"
 
 typedef struct _HybridConversation HybridConversation;
 typedef struct _HybridChatWindow   HybridChatWindow;
@@ -58,39 +59,35 @@ struct _HybridConversation {
     GSList    *chat_buddies;
 };
 
-enum _HybridChatWindowType {
-    /*
-     * system panel, double-click on buddy in the buddy list,
-     * then the popuped panel is in this type
-     */
-    HYBRID_CHAT_PANEL_SYSTEM,
+// enum _HybridChatWindowType {
+//     /*
+//      * system panel, double-click on buddy in the buddy list,
+//      * then the popuped panel is in this type
+//      */
+//     HYBRID_CHAT_PANEL_SYSTEM,
 
-    /*
-     * Group chat panel. UNUSED now (6-30)
-     */
-    HYBRID_CHAT_PANEL_GROUP_CHAT,
+//     /*
+//      * Group chat panel. UNUSED now (6-30)
+//      */
+//     HYBRID_CHAT_PANEL_GROUP_CHAT,
 
-    /*
-     * use-defined panel, should specify the callback function
-     * for the send button click signal.
-     */
-    HYBRID_CHAT_PANEL_USER_DEFINED
-};
+//     /*
+//      * use-defined panel, should specify the callback function
+//      * for the send button click signal.
+//      */
+//     HYBRID_CHAT_PANEL_USER_DEFINED
+// };
 
 struct _HybridChatWindow {
     HybridConversation   *parent;
-    HybridChatWindowType  type;
-    HybridAccount        *account;
-    gchar                *id;
-
-    gchar     *title;           /**< only be used when it's user-defined window. */
+    // HybridChatWindowType  type;
+    HybridChatSession    *session;
     GdkPixbuf *icon;            /**< only be used when it's user-defined window. */
 
-    gint unread;                /* count of the unread message. */
+    /* Also use signals instead. add hook to signal new of session */
+    /* and connect to signal new-message and destroy for every new object */
+    //HybridLogs *logs;           /* log context. */
 
-    HybridLogs *logs;           /* log context. */
-
-    gpointer   data;
     GtkWidget *pagelabel;
 
 
@@ -110,12 +107,10 @@ struct _HybridChatWindow {
     GtkWidget   *tiplabel;
     GtkTreeIter  tipiter;
 
-    /* callback function called when the send button clicked,
-     * only be used when it's user-defined window. */
-    ChatCallback callback;
+    /* Use signals instead. */
+    //ChatCallback callback;
 
     guint    typing_source;
-    gboolean is_typing;
 
     /* event source of the inputing timeout event. */
     guint input_source;
@@ -147,12 +142,14 @@ enum {
 
 enum {
     MSG_NOTIFICATION_INPUT,
-    MSG_NOTIFICATION_ERROR,
+    MSG_NOTIFICATION_ERROR
 };
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+    void hybrid_chat_window_init();
 
 /**
  * Create a chat panel.
@@ -163,9 +160,8 @@ extern "C" {
  *
  * @return The HybridChatWindow created.
  */
-HybridChatWindow *hybrid_chat_window_create(HybridAccount *account,
-                                            const gchar *id,
-                                            HybridChatWindowType type);
+    HybridChatWindow *hybrid_chat_window_create(HybridChatSession *session,
+                                                HybridChatWindowType type);
 
 /**
  * Set the title of the chat window, it's only used when
@@ -175,8 +171,8 @@ HybridChatWindow *hybrid_chat_window_create(HybridAccount *account,
  * @param window The user-defined chat window.
  * @param title  The title of the chat window.
  */
-void hybrid_chat_window_set_title(HybridChatWindow *window,
-                                  const gchar *title);
+    void hybrid_chat_window_set_title(HybridChatWindow *window,
+                                      const gchar *title);
 
 /**
  * Set the icon of the chat window, it's only used when
@@ -186,8 +182,8 @@ void hybrid_chat_window_set_title(HybridChatWindow *window,
  * @param window The user-defined chat window.
  * @param pixbuf The icon.
  */
-void hybrid_chat_window_set_icon(HybridChatWindow *window,
-                                 GdkPixbuf *pixbuf);
+    // void hybrid_chat_window_set_icon(HybridChatWindow *window,
+    //                                  GdkPixbuf *pixbuf);
 
 /**
  * Find a chat window for buddy with the given buddy id.
@@ -196,7 +192,7 @@ void hybrid_chat_window_set_icon(HybridChatWindow *window,
  *
  * @param chat NULL if not found.
  */
-HybridChatWindow *hybrid_conv_find_chat(const gchar *buddy_id);
+    HybridChatWindow *hybrid_conv_find_chat(const gchar *buddy_id);
 
 /**
  * Set the callback function for the send button click event,
@@ -206,19 +202,19 @@ HybridChatWindow *hybrid_conv_find_chat(const gchar *buddy_id);
  * @param window   The user-defined chat window.
  * @param callback The callback function.
  */
-void hybrid_chat_window_set_callback(HybridChatWindow *window,
-                                     ChatCallback callback);
+    void hybrid_chat_window_set_callback(HybridChatWindow *window,
+                                         ChatCallback callback);
 
-void hybrid_conv_got_message(HybridAccount *account,
-                             const gchar *buddy_id, const gchar *message,
-                             time_t time);
+    void hybrid_conv_got_message(HybridAccount *account,
+                                 const gchar *buddy_id, const gchar *message,
+                                 time_t time);
 
 /**
  * Set the chat text ops.
  *
  * @param ops The ops methods.
  */
-void hybrid_conv_set_chat_text_ops(HybridChatTextOps *ops);
+    void hybrid_conv_set_chat_text_ops(HybridChatTextOps *ops);
 
 /**
  * Got a status message to display in the receiving window.
@@ -228,8 +224,8 @@ void hybrid_conv_set_chat_text_ops(HybridChatTextOps *ops);
  * @param text     Content of the status message.
  * @param type     Tyep of the status.
  */
-void hybrid_conv_got_status(HybridAccount *account, const gchar *buddy_id,
-                            const gchar *text, gint type);
+    void hybrid_conv_got_status(HybridAccount *account, const gchar *buddy_id,
+                                const gchar *text, gint type);
 
 /**
  * Got an buddy's inputing message.
@@ -238,8 +234,8 @@ void hybrid_conv_got_status(HybridAccount *account, const gchar *buddy_id,
  * @param buddy_id  ID of the buddy to which the chat window belongs.
  * @param auto_stop If TRUE it will set the inputing state to be stoped automaticly.
  */
-void hybrid_conv_got_input(HybridAccount *account, const gchar *buddy_id,
-                           gboolean auto_stop);
+    void hybrid_conv_got_input(HybridAccount *account, const gchar *buddy_id,
+                               gboolean auto_stop);
 
 /**
  * Got an buddy's stopping inputing message.
@@ -247,7 +243,7 @@ void hybrid_conv_got_input(HybridAccount *account, const gchar *buddy_id,
  * @param account   The account.
  * @param buddy_id  ID of the buddy to which the chat window belongs.
  */
-void hybrid_conv_stop_input(HybridAccount *account, const gchar *buddy_id);
+    void hybrid_conv_stop_input(HybridAccount *account, const gchar *buddy_id);
 
 /**
  * Clear the inputing message.
@@ -255,20 +251,20 @@ void hybrid_conv_stop_input(HybridAccount *account, const gchar *buddy_id);
  * @param account The account.
  * @param buddy_id ID of the buddy to which the chat window belongs.
  */
-void hybrid_conv_clear_input(HybridAccount *account, const gchar *buddy_id);
+    void hybrid_conv_clear_input(HybridAccount *account, const gchar *buddy_id);
 
 /**
  * Get the supported theme list.
  *
  * @return The theme list terminated with the name set to NULL.
  */
-HybridChatTheme *hybrid_chat_window_get_themes(void);
+    HybridChatTheme *hybrid_chat_window_get_themes(void);
 
 /**
  * Update the tips title of the chat window, usually used when
  * a new message is received, or messages are being read.
  */
-void hybrid_chat_window_update_tips(HybridChatWindow *window);
+    void hybrid_chat_window_update_tips(HybridChatWindow *window);
 
 #ifdef __cplusplus
 }

@@ -230,6 +230,7 @@ set(hybrid_SRC
   lib/pref.c
   lib/logs.c
   lib/chat.c
+  lib/init.c
   src/gtkconn.c
   src/gtksound.c
   src/gtkutils.c
