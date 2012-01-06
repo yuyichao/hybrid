@@ -82,24 +82,31 @@ hybrid_new_session_hook(GSignalInvocationHint *ihint, guint n,
 static void
 hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
 {
+    static GQuark send = g_quark_from_static_string("send");
+    static GQuark reveive = g_quark_from_static_string("receive");
+    static GQuark state = g_quark_from_static_string("state");
+    static GQuark group = g_quark_from_static_string("group");
     if (!detail) {
-        hybrid_debug_warning(__func__, "New Session with hint NULL.");
-        goto receive;
-    } else if (detail == g_quark_from_static_string("send")) {
+        hybrid_debug_warning(__func__, "New Session with hint NULL. "
+                             "Treat as sending.");
+        goto send;
+    } else if (detail == send) {
     send:
 
-    } else if (detail == g_quark_from_static_string("receive")) {
+    } else if (detail == receive)) {
     receive:
 
-    } else if (detail == g_quark_from_static_string("state")) {
+    } else if (detail == state) {
     state:
 
-    } else if (detail == g_quark_from_static_string("group")) {
+    } else if (detail == group) {
     group:
 
     } else {
     unknown:
-
+        hybrid_debug_error(__func__, "New Session with unknown hint %s. "
+                           "Treat as sending.", g_quark_to_string(detail));
+        goto send;
     }
 }
 
@@ -1594,7 +1601,7 @@ hybrid_conv_clear_input(HybridAccount *account, const gchar *buddy_id)
     text_ops->notify(chat->textview, "" , MSG_NOTIFICATION_INPUT);
 }
 
-void
+static void
 hybrid_chat_window_set_title(HybridChatWindow *window, const gchar *title)
 {
     GtkTreeModel *model;
@@ -1619,33 +1626,35 @@ hybrid_chat_window_set_title(HybridChatWindow *window, const gchar *title)
     gtk_list_store_set(store, &window->tipiter, BUDDY_NAME_COLUMN, title, -1);
 }
 
-void
-hybrid_chat_window_set_icon(HybridChatWindow *window, GdkPixbuf *pixbuf)
-{
-    GtkTreeModel *model;
-    GtkListStore *store;
 
-    g_return_if_fail(window != NULL);
+// UNUSED now.
+/* void */
+/* hybrid_chat_window_set_icon(HybridChatWindow *window, GdkPixbuf *pixbuf) */
+/* { */
+/*     GtkTreeModel *model; */
+/*     GtkListStore *store; */
 
-    if (!IS_USER_DEFINED_CHAT(window)) {
-        return;
-    }
+/*     g_return_if_fail(window != NULL); */
 
-    g_object_ref(pixbuf);
-    window->icon = pixbuf;
+/*     if (!IS_USER_DEFINED_CHAT(window)) { */
+/*         return; */
+/*     } */
 
-    model = gtk_cell_view_get_model(GTK_CELL_VIEW(window->tablabel));
-    store = GTK_LIST_STORE(model);
+/*     g_object_ref(pixbuf); */
+/*     window->icon = pixbuf; */
 
-    gtk_list_store_set(store, &window->tabiter, TAB_STATUS_ICON_COLUMN,
-                       pixbuf, -1);
+/*     model = gtk_cell_view_get_model(GTK_CELL_VIEW(window->tablabel)); */
+/*     store = GTK_LIST_STORE(model); */
 
-    model = gtk_cell_view_get_model(GTK_CELL_VIEW(window->tiplabel));
-    store = GTK_LIST_STORE(model);
+/*     gtk_list_store_set(store, &window->tabiter, TAB_STATUS_ICON_COLUMN, */
+/*                        pixbuf, -1); */
 
-    gtk_list_store_set(store, &window->tipiter,
-                       BUDDY_ICON_COLUMN, pixbuf, -1);
-}
+/*     model = gtk_cell_view_get_model(GTK_CELL_VIEW(window->tiplabel)); */
+/*     store = GTK_LIST_STORE(model); */
+
+/*     gtk_list_store_set(store, &window->tipiter, */
+/*                        BUDDY_ICON_COLUMN, pixbuf, -1); */
+/* } */
 
 /* HybridChatWindow* */
 /* hybrid_conv_find_chat(const gchar *buddy_id) */
@@ -1674,15 +1683,6 @@ hybrid_chat_window_set_icon(HybridChatWindow *window, GdkPixbuf *pixbuf)
 /*     } */
 
 /*     return NULL; */
-/* } */
-
-/* void */
-/* hybrid_chat_window_set_callback(HybridChatWindow *window, */
-/*                     ChatCallback callback) */
-/* { */
-/*     g_return_if_fail(window != NULL); */
-
-/*     window->callback = callback; */
 /* } */
 
 void

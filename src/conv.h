@@ -152,28 +152,6 @@ extern "C" {
     void hybrid_chat_window_init();
 
 /**
- * Create a chat panel.
- *
- * @param account The account context.
- * @param buddy   ID of the panel.
- * @param type    The type of the chat panel.
- *
- * @return The HybridChatWindow created.
- */
-    // HybridChatWindow *hybrid_chat_window_create(HybridChatSession *session);
-
-/**
- * Set the title of the chat window, it's only used when
- * the window is a user-defined window, otherwise this function
- * will be ignored.
- *
- * @param window The user-defined chat window.
- * @param title  The title of the chat window.
- */
-    // void hybrid_chat_window_set_title(HybridChatWindow *window,
-    //                                   const gchar *title);
-
-/**
  * Set the icon of the chat window, it's only used when
  * the window is a user-defined window, otherwise this function
  * will be ignored.
@@ -197,17 +175,6 @@ extern "C" {
      * itself), and this one can also be done by using the data arguement  *
      * when connecting to the unread signal.                               */
     // HybridChatWindow *hybrid_conv_find_chat(const gchar *buddy_id);
-
-/**
- * Set the callback function for the send button click event,
- * it's only used when the window is a user-defined window,
- * otherwise this function will be ignored.
- *
- * @param window   The user-defined chat window.
- * @param callback The callback function.
- */
-    // void hybrid_chat_window_set_callback(HybridChatWindow *window,
-    //                                      ChatCallback callback);
 
     void hybrid_conv_got_message(HybridAccount *account,
                                  const gchar *buddy_id, const gchar *message,
