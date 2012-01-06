@@ -160,7 +160,7 @@ extern "C" {
  *
  * @return The HybridChatWindow created.
  */
-    HybridChatWindow *hybrid_chat_window_create(HybridChatSession *session);
+    // HybridChatWindow *hybrid_chat_window_create(HybridChatSession *session);
 
 /**
  * Set the title of the chat window, it's only used when
@@ -170,8 +170,8 @@ extern "C" {
  * @param window The user-defined chat window.
  * @param title  The title of the chat window.
  */
-    void hybrid_chat_window_set_title(HybridChatWindow *window,
-                                      const gchar *title);
+    // void hybrid_chat_window_set_title(HybridChatWindow *window,
+    //                                   const gchar *title);
 
 /**
  * Set the icon of the chat window, it's only used when

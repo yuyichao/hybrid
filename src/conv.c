@@ -1288,7 +1288,7 @@ init_chat_window(HybridChatWindow *chat)
     gtk_widget_grab_focus(chat->sendtext);
 }
 
-HybridChatWindow*
+static HybridChatWindow*
 hybrid_chat_window_create(HybridChatSession *session)
 {
     HybridAccount      *account = session->account;

@@ -222,8 +222,8 @@ row_activate_func(GtkTreeView *view, GtkTreePath *path,
     gtk_tree_model_get(model, &iter,
             HYBRID_BLIST_OBJECT_COLUMN, &buddy, -1);
 
-    hybrid_chat_window_create(buddy->account, buddy->id,
-            HYBRID_CHAT_PANEL_SYSTEM);
+    hybrid_chat_session_new_default(buddy->account, buddy->id, "send",
+                                    NULL, NULL);
 }
 
 

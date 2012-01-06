@@ -214,7 +214,7 @@ default_self_state_cb(HybridChatSession *session, GParamSpec *pspec,
 
 HybridChatSession *
 hybrid_chat_session_new_default(HybridAccount *account, const gchar *id,
-                                gboolean in, const gchar *hint, gpointer data,
+                                const gchar *hint, gpointer data,
                                 const gchar *first_prop_name, ...)
 {
     HybridChatSession *session;

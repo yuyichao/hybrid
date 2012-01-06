@@ -270,7 +270,8 @@ render_column(HybridBlist *blist)
 static void
 instant_message_menu_cb(GtkWidget *widget, HybridBuddy *buddy)
 {
-    hybrid_chat_window_create(buddy->account, buddy->id, HYBRID_CHAT_PANEL_SYSTEM);
+    hybrid_chat_session_new_default(buddy->account, buddy->id, "send",
+                                    NULL, NULL);
 }
 
 static void
@@ -790,8 +791,8 @@ row_activated_cb(GtkTreeView       *treeview, GtkTreePath *path,
         gtk_tree_model_get(model, &iter,
                            HYBRID_BLIST_OBJECT_COLUMN, &buddy, -1);
 
-        hybrid_chat_window_create(buddy->account, buddy->id,
-                                  HYBRID_CHAT_PANEL_SYSTEM);
+        hybrid_chat_session_new_default(buddy->account, buddy->id, "send",
+                                        NULL, NULL);
     }
 }
 
