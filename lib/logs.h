@@ -43,7 +43,7 @@ extern "C" {
  *
  * HYBRID_OK or HYBRID_ERROR in case of an error.
  */
-gint hybrid_logs_init(void);
+    gint hybrid_logs_init(void);
 
 /**
  * Create a log context.
@@ -53,8 +53,8 @@ gint hybrid_logs_init(void);
  *
  * @return The log context created.
  */
-HybridLogs *hybrid_logs_create(HybridAccount *account,
-                               const gchar *id);
+    HybridLogs *hybrid_logs_create(HybridAccount *account,
+                                   const gchar *id);
 
 /**
  * Write a log.
@@ -64,15 +64,15 @@ HybridLogs *hybrid_logs_create(HybridAccount *account,
  * @param msg     The content of the message.
  * @param sendout Whether the message is sent out or received.
  */
-gint hybrid_logs_write(HybridLogs *log, const gchar *name, const gchar *msg,
-                       gboolean sendout);
+    gint hybrid_logs_write(HybridLogs *log, const gchar *name, const gchar *msg,
+                           gboolean sendout);
 
 /**
  * Destroy a log context.
  *
  * @param log The log context to destroy.
  */
-void hybrid_logs_destroy(HybridLogs *log);
+    void hybrid_logs_destroy(HybridLogs *log);
 
 #ifdef __cplusplus
 }

@@ -32,9 +32,9 @@ typedef struct _HybridConversation HybridConversation;
 typedef struct _HybridChatWindow   HybridChatWindow;
 typedef struct _HybridChatTextOps  HybridChatTextOps;
 typedef struct _HybridChatTheme    HybridChatTheme;
-typedef enum _HybridChatWindowType HybridChatWindowType;
+// typedef enum _HybridChatWindowType HybridChatWindowType;
 
-typedef void (*ChatCallback)(HybridAccount *, const gchar *);
+// typedef void (*ChatCallback)(HybridAccount *, const gchar *);
 
 typedef GtkWidget* (*text_create)(void);
 typedef void (*text_append)(GtkWidget *, HybridAccount *,
@@ -160,8 +160,7 @@ extern "C" {
  *
  * @return The HybridChatWindow created.
  */
-    HybridChatWindow *hybrid_chat_window_create(HybridChatSession *session,
-                                                HybridChatWindowType type);
+    HybridChatWindow *hybrid_chat_window_create(HybridChatSession *session);
 
 /**
  * Set the title of the chat window, it's only used when
@@ -192,7 +191,12 @@ extern "C" {
  *
  * @param chat NULL if not found.
  */
-    HybridChatWindow *hybrid_conv_find_chat(const gchar *buddy_id);
+    /* AFAIK, the only use of this function (after using signals to handle *
+     * messages etc.) is to find the right panel to activate from system   *
+     * tray icon (because all others can be done just by the session       *
+     * itself), and this one can also be done by using the data arguement  *
+     * when connecting to the unread signal.                               */
+    // HybridChatWindow *hybrid_conv_find_chat(const gchar *buddy_id);
 
 /**
  * Set the callback function for the send button click event,
@@ -202,8 +206,8 @@ extern "C" {
  * @param window   The user-defined chat window.
  * @param callback The callback function.
  */
-    void hybrid_chat_window_set_callback(HybridChatWindow *window,
-                                         ChatCallback callback);
+    // void hybrid_chat_window_set_callback(HybridChatWindow *window,
+    //                                      ChatCallback callback);
 
     void hybrid_conv_got_message(HybridAccount *account,
                                  const gchar *buddy_id, const gchar *message,

@@ -202,6 +202,14 @@ static void
 default_send_cb(HybridChatSession *session, HybridMessage *msg, gpointer data)
 {
     //TODO: Call the default send method of the protocol here.
+    //This wrapper might be removed.
+}
+
+static void
+default_self_state_cb(HybridChatSession *session, GParamSpec *pspec,
+                      gpointer data)
+{
+    //TODO: Call the default state-change callback of the protocol.
 }
 
 HybridChatSession *
@@ -218,6 +226,8 @@ hybrid_chat_session_new_default(HybridAccount *account, const gchar *id,
 
     g_signal_connect(session, "new-message::out",
                      G_CALLBACK(default_send_cb), NULL);
+    g_signal_connect(session, "notify::self-state",
+                     G_CALLBACK(default_self_state_cb), NULL);
 
     hybrid_chat_session_finish(session, hint);
     return session;
@@ -378,6 +388,12 @@ hybrid_message_get_content(HybridMessage *msg)
     if (msg->content)
         return g_strdup(msg->content);
     return NULL;
+}
+
+const gchar*
+hybrid_message_content(HybridMessage *msg)
+{
+    return msg->content;
 }
 
 void

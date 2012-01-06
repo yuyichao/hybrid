@@ -38,7 +38,6 @@ hybrid_logs_init(void)
         hybrid_debug_error("logs", "%s,cannot create, read or write",
                             log_path);
         g_free(log_path);
-
         return HYBRID_ERROR;
     }
 

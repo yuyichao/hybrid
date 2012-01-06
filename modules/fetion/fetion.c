@@ -521,14 +521,14 @@ get_info_cb(fetion_account *ac, const gchar *sipmsg, fetion_transaction *trans)
 }
 
 static void
-sms_to_me_send_cb(HybridAccount *account, const gchar *text)
+sms_to_me_send_cb(HybridChatSession *session, HybridMessage *msg, gpointer data)
 {
     fetion_account *ac;
 
-    ac = hybrid_account_get_protocol_data(account);
+    ac = hybrid_account_get_protocol_data(session->account);
 
     /* TODO set feedback to the chat window. */
-    fetion_message_send_to_me(ac, text);
+    fetion_message_send_to_me(ac, hybrid_message_content(msg));
 }
 
 
@@ -536,15 +536,15 @@ static void
 sms_to_me_cb(HybridAction *action)
 {
     HybridAccount *account;
-    HybridChatWindow *window;
+    HybridChatSession *session;
 
     account = hybrid_action_get_account(action);
 
-    window = hybrid_chat_window_create(account, "000000",
-                                       HYBRID_CHAT_PANEL_USER_DEFINED);
-
-    hybrid_chat_window_set_title(window, _("SMS To Me"));
-    hybrid_chat_window_set_callback(window, (ChatCallback)sms_to_me_send_cb);
+    session = hybrid_chat_session_new(account, "000000", NULL,
+                                      "title", _("SMS To Me"), NULL);
+    g_signal_connect(session, "new-message::out",
+                     G_CALLBACK(sms_to_me_send_cb), NULL);
+    hybrid_chat_session_finish(session, "send");
 }
 
 static gboolean

@@ -125,6 +125,7 @@ extern "C" {
     HybridMessage *hybrid_message_new(time_t time, gboolean in);
     void hybrid_message_free(HybridMessage *msg);
     gchar *hybrid_message_get_content(HybridMessage *msg);
+    const gchar *hybrid_message_content(HybridMessage *msg);
     void hybrid_message_set_content(HybridMessage *msg, const gchar *content);
 
 #ifdef __cplusplus

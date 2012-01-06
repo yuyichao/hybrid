@@ -1289,8 +1289,7 @@ init_chat_window(HybridChatWindow *chat)
 }
 
 HybridChatWindow*
-hybrid_chat_window_create(HybridChatSession *session,
-                          HybridChatWindowType type)
+hybrid_chat_window_create(HybridChatSession *session)
 {
     HybridAccount      *account = session->account;
     HybridChatWindow   *chat = NULL;
@@ -1343,7 +1342,7 @@ hybrid_chat_window_create(HybridChatSession *session,
     chat->id      = g_strdup(id);
     chat->parent  = conv;
     chat->account = account;
-    chat->type    = type;
+    /* chat->type    = type; */
     //chat->logs    = hybrid_logs_create(account, id);
 
     if (type == HYBRID_CHAT_PANEL_SYSTEM) {
@@ -1648,43 +1647,43 @@ hybrid_chat_window_set_icon(HybridChatWindow *window, GdkPixbuf *pixbuf)
                        BUDDY_ICON_COLUMN, pixbuf, -1);
 }
 
-HybridChatWindow*
-hybrid_conv_find_chat(const gchar *buddy_id)
-{
-    GSList             *conv_pos;
-    GSList             *chat_pos;
-    HybridConversation *conv;
-    HybridChatWindow   *chat;
-    HybridBuddy        *temp_buddy;
+/* HybridChatWindow* */
+/* hybrid_conv_find_chat(const gchar *buddy_id) */
+/* { */
+/*     GSList             *conv_pos; */
+/*     GSList             *chat_pos; */
+/*     HybridConversation *conv; */
+/*     HybridChatWindow   *chat; */
+/*     HybridBuddy        *temp_buddy; */
 
-    g_return_val_if_fail(buddy_id != NULL, NULL);
+/*     g_return_val_if_fail(buddy_id != NULL, NULL); */
 
-    for (conv_pos = conv_list; conv_pos; conv_pos = conv_pos->next) {
-        conv = (HybridConversation*)conv_pos->data;
+/*     for (conv_pos = conv_list; conv_pos; conv_pos = conv_pos->next) { */
+/*         conv = (HybridConversation*)conv_pos->data; */
 
-        for (chat_pos = conv->chat_buddies; chat_pos;
-             chat_pos = chat_pos->next) {
-            chat = (HybridChatWindow*)chat_pos->data;
+/*         for (chat_pos = conv->chat_buddies; chat_pos; */
+/*              chat_pos = chat_pos->next) { */
+/*             chat = (HybridChatWindow*)chat_pos->data; */
 
-            temp_buddy = chat->data;
+/*             temp_buddy = chat->data; */
 
-            if (g_strcmp0(temp_buddy->id, buddy_id) == 0) {
-                return chat;
-            }
-        }
-    }
+/*             if (g_strcmp0(temp_buddy->id, buddy_id) == 0) { */
+/*                 return chat; */
+/*             } */
+/*         } */
+/*     } */
 
-    return NULL;
-}
+/*     return NULL; */
+/* } */
 
-void
-hybrid_chat_window_set_callback(HybridChatWindow *window,
-                    ChatCallback callback)
-{
-    g_return_if_fail(window != NULL);
+/* void */
+/* hybrid_chat_window_set_callback(HybridChatWindow *window, */
+/*                     ChatCallback callback) */
+/* { */
+/*     g_return_if_fail(window != NULL); */
 
-    window->callback = callback;
-}
+/*     window->callback = callback; */
+/* } */
 
 void
 hybrid_chat_window_update_tips(HybridChatWindow *window)
