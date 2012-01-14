@@ -61,12 +61,17 @@ static GtkWidget *create_note_label(HybridChatWindow *chat);
 static void chat_window_destroy(HybridChatWindow *chat);
 static gboolean key_press_func(GtkWidget *widget, GdkEventKey *event,
                             HybridConversation *conv);
+static HybridChatWindow*
+hybrid_chat_window_create(HybridChatSession *session);
+
+static GHashTable *filter_results = NULL;
 
 void hybrid_chat_window_init()
 {
     g_signal_add_emission_hook(g_signal_lookup("new",
                                                HYBRID_TYPE_CHAT_SESSION),
                                0, hybrid_new_session_hook, NULL, NULL);
+    filter_results = g_hash_table_new(NULL, NULL);
 }
 
 static gboolean
@@ -79,6 +84,15 @@ hybrid_new_session_hook(GSignalInvocationHint *ihint, guint n,
     return TRUE;
 }
 
+typedef enum {
+    HYBRID_FILTER_NONE = 0,
+    HYBRID_FILTER_IGNORE = HYBRID_FILTER_NONE,
+    HYBRID_FILTER_NEW_WINDOW = (1 << 0),
+    HYBRID_FILTER_NOTIFY = (1 << 1),
+    HYBRID_FILTER_POPUP_WINDOW = (1 << 2),
+    HYBRID_FILTER_GROUP = (1 << 3)
+} HybridFilter;
+
 static void
 hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
 {
@@ -86,27 +100,59 @@ hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
     static GQuark reveive = g_quark_from_static_string("receive");
     static GQuark state = g_quark_from_static_string("state");
     static GQuark group = g_quark_from_static_string("group");
+
+    //~~ not a flexible implement, use for now.
+    HybridFilter action;
     if (!detail) {
         hybrid_debug_warning(__func__, "New Session with hint NULL. "
                              "Treat as sending.");
         goto send;
     } else if (detail == send) {
     send:
-
-    } else if (detail == receive)) {
+        action = HYBRID_FILTER_NEW_WINDOW;
+    } else if (detail == receive) {
     receive:
-
+        action = HYBRID_FILTER_NEW_WINDOW;
     } else if (detail == state) {
     state:
-
+        action = HYBRID_FILTER_IGNORE;
     } else if (detail == group) {
     group:
-
+        action = HYBRID_FILTER_GROUP;
     } else {
     unknown:
         hybrid_debug_error(__func__, "New Session with unknown hint %s. "
                            "Treat as sending.", g_quark_to_string(detail));
         goto send;
+    }
+
+    /* if (action) */
+    /*     g_hash_table_insert(filter_results, session, action); */
+
+
+    switch (action) {
+    case HYBRID_FILTER_NEW_WINDOW:
+        /* maybe will deal with the reference count in the create function. */
+        g_object_ref(session);
+        g_hash_table_insert(filter_results, session, action);
+        hybrid_chat_window_create(session);
+        break;
+    case HYBRID_FILTER_NOTIFY:
+        /* Haven't done yet. */
+        //g_object_ref(session);
+        break;
+    case HYBRID_FILTER_POPUP_WINDOW:
+        /* Haven't done either. */
+        //g_object_ref(session);
+        break;
+    case HYBRID_FILTER_GROUP:
+        /* ~~~ */
+        //g_object_ref(session);
+        break;
+    case HYBRID_FILTER_IGNORE:
+        break;
+    default:
+        hybrid_debug_error(__func__, "Unknow action %d.", action);
     }
 }
 
@@ -170,7 +216,7 @@ chat_window_destroy(HybridChatWindow *chat)
 
 static void
 switch_page_cb(GtkNotebook *notebook, gpointer newpage, guint newpage_nth,
-        gpointer user_data)
+               gpointer user_data)
 {
     GSList             *pos;
     HybridChatWindow   *chat;
@@ -1274,11 +1320,11 @@ init_chat_window(HybridChatWindow *chat)
 
     chat->pagelabel = create_note_label(chat);
     page_index = gtk_notebook_append_page(GTK_NOTEBOOK(conv->notebook), vbox,
-            chat->pagelabel);
+                                          chat->pagelabel);
     gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(conv->notebook), vbox, TRUE);
     gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(conv->notebook), vbox, TRUE);
     gtk_notebook_set_tab_label_packing(GTK_NOTEBOOK(conv->notebook),
-            vbox, TRUE, TRUE, GTK_PACK_START);
+                                       vbox, TRUE, TRUE, GTK_PACK_START);
 
     init_chat_window_body(vbox, chat);
 
@@ -1302,38 +1348,38 @@ hybrid_chat_window_create(HybridChatSession *session)
     HybridChatWindow   *chat = NULL;
     HybridConversation *conv = NULL;
     HybridBuddy        *buddy;
-    HybridModule       *proto;
-    HybridIMOps        *ops;
+    /* HybridModule       *proto; */
+    /* HybridIMOps        *ops; */
 
     g_return_val_if_fail(account != NULL, NULL);
     g_return_val_if_fail(id != NULL, NULL);
 
-    if (type == HYBRID_CHAT_PANEL_SYSTEM) {
-        if (!(buddy = (hybrid_blist_find_buddy(account, session->id)))) {
-            hybrid_debug_error("conv", "FATAL, can't find buddy");
-            return NULL;
-        }
-
-        proto = account->proto;
-        ops = proto->info->im_ops;
-
-        /* we will check whether the protocol allows this buddy to be activated. */
-        if (ops->chat_start) {
-            if (!ops->chat_start(account, buddy)) {
-                return NULL;
-            }
-        }
+    if (!(buddy = (hybrid_blist_find_buddy(account, session->id)))) {
+        //TODO
+        hybrid_debug_warning("conv", "FATAL, can't find buddy.");
     }
 
-    if ((chat = hybrid_conv_find_chat(id))) {
-        conv = chat->parent;
-        goto found;
-    }
+    /* proto = account->proto; */
+    /* ops = proto->info->im_ops; */
+
+    /* we will check whether the protocol allows this buddy to be activated. */
+    /* TODO check this in chat.c */
+    /* if (ops->chat_start) { */
+    /*     if (!ops->chat_start(account, buddy)) { */
+    /*         return NULL; */
+    /*     } */
+    /* } */
+
+    /* if ((chat = hybrid_conv_find_chat(id))) { */
+    /*     conv = chat->parent; */
+    /*     goto found; */
+    /* } */
 
     /*
      * Whether to show the chat dialog in a single window.
      */
     if (hybrid_pref_get_boolean(NULL, "single_chat_window")) {
+        //TODO setting changed while more than one chat windows are openned.
         if (!conv_list) {
             conv = hybrid_conv_create();
             conv_list = g_slist_append(conv_list, conv);
@@ -1346,15 +1392,14 @@ hybrid_chat_window_create(HybridChatSession *session)
     }
 
     chat          = g_new0(HybridChatWindow, 1);
-    chat->id      = g_strdup(id);
+    chat->id      = g_strdup(session->id);
     chat->parent  = conv;
     chat->account = account;
     /* chat->type    = type; */
+    //TODO add hook for log (in log_init())
     //chat->logs    = hybrid_logs_create(account, id);
 
-    if (type == HYBRID_CHAT_PANEL_SYSTEM) {
-        chat->data = buddy;
-    }
+    chat->data = buddy;
 
     conv->chat_buddies = g_slist_append(conv->chat_buddies, chat);
 

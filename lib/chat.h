@@ -40,6 +40,12 @@ typedef enum {
     HYBRID_TYPE_STOPPED
 } HybridTypeState;
 
+typedef enum {
+    HYBRID_CHAT_SESSION_CB_NONE = 0,
+    HYBRID_CHAT_SESSION_CB_MSG,
+    HYBRID_CHAT_SESSION_CB_STATE
+} HybridChatSessionCb;
+
 #define HYBRID_TYPE_CHAT_SESSION (hybrid_chat_session_get_type())
 #define HYBRID_CHAT_SESSION(obj)                                        \
     (G_TYPE_CHECK_INSTANCE_CAST((obj), HYBRID_TYPE_CHAT_SESSION,        \
@@ -64,7 +70,7 @@ struct _HybridChatSession {
     HybridAccount *account;
 
     gchar *id;
-    gpointer data;
+    gboolean presented;
 
     GList *messages;
 
@@ -87,18 +93,28 @@ extern "C" {
     void hybrid_chat_session_init();
 
     HybridChatSession* hybrid_chat_session_newv(
-        HybridAccount *account, const gchar *id, gpointer data,
-        const gchar *first_prop_name, va_list var_args);
+        HybridAccount *account, const gchar *id, const gchar *first_prop_name,
+        va_list var_args);
     HybridChatSession *hybrid_chat_session_new(
-        HybridAccount *account, const gchar *id, gpointer data,
+        HybridAccount *account, const gchar *id,
         const gchar *first_prop_name, ...);
 
     HybridChatSession *hybrid_chat_session_new_default(
         HybridAccount *account, const gchar *id, const gchar *hint,
-        gpointer data, const gchar *first_prop_name, ...);
+        const gchar *first_prop_name, ...);
 
-    void hybrid_chat_session_finish(HybridChatSession *session,
-                                    const gchar *hint);
+    void hybrid_chat_session_connect(HybridChatSession *session, ...);
+
+    static inline void
+    hybrid_chat_session_connect_defaults(HybridChatSession *session)
+    {
+        hybrid_chat_session_connect(session,
+                                    HYBRID_CHAT_SESSION_CB_MSG, NULL,
+                                    HYBRID_CHAT_SESSION_CB_STATE, NULL, 0);
+    }
+
+    void hybrid_chat_session_present(HybridChatSession *session,
+                                     const gchar *hint);
 
     void hybrid_chat_session_set_unread(HybridChatSession *session,
                                         gboolean unread);

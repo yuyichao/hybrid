@@ -32,7 +32,6 @@ typedef struct _HybridConversation HybridConversation;
 typedef struct _HybridChatWindow   HybridChatWindow;
 typedef struct _HybridChatTextOps  HybridChatTextOps;
 typedef struct _HybridChatTheme    HybridChatTheme;
-// typedef enum _HybridChatWindowType HybridChatWindowType;
 
 // typedef void (*ChatCallback)(HybridAccount *, const gchar *);
 
@@ -59,30 +58,10 @@ struct _HybridConversation {
     GSList    *chat_buddies;
 };
 
-// enum _HybridChatWindowType {
-//     /*
-//      * system panel, double-click on buddy in the buddy list,
-//      * then the popuped panel is in this type
-//      */
-//     HYBRID_CHAT_PANEL_SYSTEM,
-
-//     /*
-//      * Group chat panel. UNUSED now (6-30)
-//      */
-//     HYBRID_CHAT_PANEL_GROUP_CHAT,
-
-//     /*
-//      * use-defined panel, should specify the callback function
-//      * for the send button click signal.
-//      */
-//     HYBRID_CHAT_PANEL_USER_DEFINED
-// };
-
 struct _HybridChatWindow {
     HybridConversation   *parent;
-    // HybridChatWindowType  type;
     HybridChatSession    *session;
-    GdkPixbuf *icon;            /**< only be used when it's user-defined window. */
+    GdkPixbuf *icon;      /**< only used when it's user-defined window. */
 
     /* Also use signals instead. add hook to signal new of session */
     /* and connect to signal new-message and destroy for every new object */
@@ -115,10 +94,6 @@ struct _HybridChatWindow {
     /* event source of the inputing timeout event. */
     guint input_source;
 };
-
-#define IS_SYSTEM_CHAT(chat_window)       ((chat_window)->type == HYBRID_CHAT_PANEL_SYSTEM)
-#define IS_GROUP_CHAT(chat_window)        ((chat_window)->type == HYBRID_CHAT_PANEL_GROUP_CHAT)
-#define IS_USER_DEFINED_CHAT(chat_window) ((chat_window)->type == HYBRID_CHAT_PANEL_USER_DEFINED)
 
 /**
  * Notebook tab columns.
