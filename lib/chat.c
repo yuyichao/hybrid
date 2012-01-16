@@ -203,12 +203,12 @@ static HybridChatSession*
 _hybrid_find_chat_session(HybridAccount *account, const gchar *id)
 {
     HybridBuddyTemp buddy = {
-        .account = account;
-        .id = id;
+        .account = account,
+        .id = id
     };
     GList *res;
-    res = g_list_find_custom(session_list, (GCompareFunc)hybrid_buddy_comp,
-                             &buddy);
+    res = g_list_find_custom(session_list, &buddy,
+                             (GCompareFunc)hybrid_buddy_comp);
 
     return res ? (HybridChatSession*)res->data : NULL;
 }
@@ -222,7 +222,7 @@ hybrid_chat_session_newv(HybridAccount *account, const gchar *id,
     session = _hybrid_find_chat_session(account, id);
 
     if (!session) {
-        session = _hybrid_chat_session_newv(account, id);
+        session = _hybrid_chat_session_new(account, id);
     } else {
         g_object_ref(session);
     }
@@ -233,9 +233,10 @@ hybrid_chat_session_newv(HybridAccount *account, const gchar *id,
 
 HybridChatSession*
 hybrid_chat_session_new(HybridAccount *account, const gchar *id,
-                        const gchar *hint, const gchar *first_prop_name, ...)
+                        const gchar *first_prop_name, ...)
 {
     HybridChatSession *session;
+    va_list var_args;
 
     va_start(var_args, first_prop_name);
     session = hybrid_chat_session_newv(account, id, first_prop_name,
@@ -267,8 +268,8 @@ hybrid_chat_session_connect(HybridChatSession *session, ...)
 
     va_start(var_args, session);
 
-    type = va_arg(var_args, (HybridChatSessionCb));
-    for (;type;type = va_arg(var_args, (HybridChatSessionCb))) {
+    type = va_arg(var_args, HybridChatSessionCb);
+    for (;type;type = va_arg(var_args, HybridChatSessionCb)) {
         funp = va_arg(var_args, gpointer);
         if (type == HYBRID_CHAT_SESSION_CB_MSG) {
             g_signal_connect(session, "new-message::out",

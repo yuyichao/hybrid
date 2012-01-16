@@ -90,6 +90,8 @@ struct _HybridChatSessionClass {
 extern "C" {
 #endif
 
+    GType hybrid_chat_session_get_type();
+
     void hybrid_chat_session_init();
 
     HybridChatSession* hybrid_chat_session_newv(

@@ -96,10 +96,19 @@ typedef enum {
 static void
 hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
 {
-    static GQuark send = g_quark_from_static_string("send");
-    static GQuark reveive = g_quark_from_static_string("receive");
-    static GQuark state = g_quark_from_static_string("state");
-    static GQuark group = g_quark_from_static_string("group");
+    static GQuark send = 0;
+    static GQuark receive = 0;
+    static GQuark state = 0;
+    static GQuark group = 0;
+
+    if (!send)
+        send = g_quark_from_static_string("send");
+    if (!receive)
+        receive = g_quark_from_static_string("receive");
+    if (!state)
+        state = g_quark_from_static_string("state");
+    if (!group)
+        group = g_quark_from_static_string("group");
 
     //~~ not a flexible implement, use for now.
     HybridFilter action;
@@ -111,16 +120,12 @@ hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
     send:
         action = HYBRID_FILTER_NEW_WINDOW;
     } else if (detail == receive) {
-    receive:
         action = HYBRID_FILTER_NEW_WINDOW;
     } else if (detail == state) {
-    state:
         action = HYBRID_FILTER_IGNORE;
     } else if (detail == group) {
-    group:
         action = HYBRID_FILTER_GROUP;
     } else {
-    unknown:
         hybrid_debug_error(__func__, "New Session with unknown hint %s. "
                            "Treat as sending.", g_quark_to_string(detail));
         goto send;
@@ -129,12 +134,11 @@ hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
     /* if (action) */
     /*     g_hash_table_insert(filter_results, session, action); */
 
-
     switch (action) {
     case HYBRID_FILTER_NEW_WINDOW:
         /* maybe will deal with the reference count in the create function. */
         g_object_ref(session);
-        g_hash_table_insert(filter_results, session, action);
+        g_hash_table_insert(filter_results, session, GINT_TO_POINTER(action));
         hybrid_chat_window_create(session);
         break;
     case HYBRID_FILTER_NOTIFY:
@@ -198,18 +202,11 @@ conv_destroy_cb(GtkWidget *widget, gpointer user_data)
 static void
 chat_window_destroy(HybridChatWindow *chat)
 {
+    //TODO
     if (chat) {
-        g_free(chat->id);
-        g_free(chat->title);
-
         if (chat->icon) {
             g_object_unref(chat->icon);
         }
-
-        if (chat->logs) {
-            hybrid_logs_destroy(chat->logs);
-        }
-
         g_free(chat);
     }
 }
@@ -242,19 +239,17 @@ switch_page_cb(GtkNotebook *notebook, gpointer newpage, guint newpage_nth,
 
 page_found:
 
-    if (IS_SYSTEM_CHAT(chat)) {
+    buddy = chat->data;
 
-        buddy = chat->data;
+    /* Set the conversation window's icon. */
+    pixbuf = hybrid_create_pixbuf(buddy->icon_data, buddy->icon_data_length);
+    gtk_window_set_icon(GTK_WINDOW(conv->window), pixbuf);
+    g_object_unref(pixbuf);
 
-        /* Set the conversation window's icon. */
-        pixbuf = hybrid_create_pixbuf(buddy->icon_data, buddy->icon_data_length);
-        gtk_window_set_icon(GTK_WINDOW(conv->window), pixbuf);
-        g_object_unref(pixbuf);
-
-        /* Set the conversation window's title */
-        gtk_window_set_title(GTK_WINDOW(conv->window),
-            (!buddy->name || *(buddy->name) == '\0') ? buddy->id : buddy->name);
-    }
+    /* Set the conversation window's title */
+    gtk_window_set_title(GTK_WINDOW(conv->window),
+                         (!buddy->name || *(buddy->name) == '\0') ?
+                         buddy->id : buddy->name);
 }
 
 static gboolean
@@ -337,39 +332,41 @@ chat_found:
 
     gtk_text_buffer_delete(send_tb, &start_iter, &stop_iter);
 
-    account = chat->account;
+    account = chat->session->account;
 
     /* Add message to the textview. */
     text_ops->append(chat->textview, account, NULL,    text, time(NULL));
-    hybrid_logs_write(chat->logs, account->nickname, text, TRUE);
 
+    //TODO
+    //hybrid_logs_write(chat->logs, account->nickname, text, TRUE);
+
+    //TODO
     /* Call the protocol hook function. */
-    if (IS_SYSTEM_CHAT(chat)) {
-        buddy  = chat->data;
-        module = account->proto;
-        ops    = module->info->im_ops;
+    /* if (IS_SYSTEM_CHAT(chat)) { */
+    /*     buddy  = chat->data; */
+    /*     module = account->proto; */
+    /*     ops    = module->info->im_ops; */
 
-        if (chat->typing_source) {
-            g_source_remove(chat->typing_source);
-            chat->typing_source = 0;
-            chat->is_typing     = FALSE;
-        }
+    /*     if (chat->typing_source) { */
+    /*         g_source_remove(chat->typing_source); */
+    /*         chat->typing_source = 0; */
+    /*         chat->is_typing     = FALSE; */
+    /*     } */
 
-        if (ops->chat_send_typing) {
-            ops->chat_send_typing(account, buddy, INPUT_STATE_ACTIVE);
-        }
+    /*     if (ops->chat_send_typing) { */
+    /*         ops->chat_send_typing(account, buddy, INPUT_STATE_ACTIVE); */
+    /*     } */
 
-        if (ops->chat_send) {
-            ops->chat_send(account, buddy, text);
-        }
-    }
+    /*     if (ops->chat_send) { */
+    /*         ops->chat_send(account, buddy, text); */
+    /*     } */
+    /* } */
 
-    if (IS_USER_DEFINED_CHAT(chat)) {
-
-        if (chat->callback) {
-            chat->callback(account, text);
-        }
-    }
+    /* if (IS_USER_DEFINED_CHAT(chat)) { */
+    /*     if (chat->callback) { */
+    /*         chat->callback(account, text); */
+    /*     } */
+    /* } */
 }
 
 static void
@@ -1419,8 +1416,8 @@ found:
 
 void
 hybrid_conv_got_message(HybridAccount *account,
-                const gchar *buddy_id, const gchar *message,
-                time_t time)
+                        const gchar *buddy_id, const gchar *message,
+                        time_t time)
 {
     HybridConversation *conv;
     HybridChatWindow   *chat;
@@ -1450,7 +1447,7 @@ hybrid_conv_got_message(HybridAccount *account,
 
         /* Well, we haven't find an existing chat panel so far, so create one. */
         chat = hybrid_chat_window_create(account, buddy->id,
-                HYBRID_CHAT_PANEL_SYSTEM);
+                                         HYBRID_CHAT_PANEL_SYSTEM);
     }
 
     /* check whether the chat window is active. */

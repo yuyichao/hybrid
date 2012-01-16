@@ -18,8 +18,8 @@
  *   51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.            *
  ***************************************************************************/
 
-#ifndef HYBRID_CHAT_H
-#define HYBRID_CHAT_H
+#ifndef HYBRID_CONV_H
+#define HYBRID_CONV_H
 
 #include <gtk/gtk.h>
 #include "logs.h"
@@ -93,6 +93,9 @@ struct _HybridChatWindow {
 
     /* event source of the inputing timeout event. */
     guint input_source;
+
+    //TODO: to be removed
+    gpointer data;
 };
 
 /**
@@ -134,6 +137,7 @@ extern "C" {
  * @param window The user-defined chat window.
  * @param pixbuf The icon.
  */
+    //TODO: probably move to session~~~ or sth similar
     // void hybrid_chat_window_set_icon(HybridChatWindow *window,
     //                                  GdkPixbuf *pixbuf);
 

@@ -367,9 +367,9 @@ process_message_cb(fetion_account *ac, const gchar *sipmsg)
     HybridNotify *notify;
 
     if ((event = sip_header_get_attr(sipmsg, "N")) &&
-            g_strcmp0(event, "system-message") == 0) {
-        if (fetion_message_parse_sysmsg(sipmsg, &sysmsg_text,
-                    &sysmsg_url) != HYBRID_OK) {
+        g_strcmp0(event, "system-message") == 0) {
+        if (fetion_message_parse_sysmsg(sipmsg, &sysmsg_text, &sysmsg_url) !=
+            HYBRID_OK) {
             return;
         }
 

@@ -330,9 +330,9 @@ const gchar *hybrid_get_presence_name(gint presence_state);
  *
  * @return The variable object created.
  */
-HybridAccountVariable *hybrid_variable_create(HybridAccountVariableType	 type,
-											  const gchar				*var_name,
-											  const gchar				*var_title);
+HybridAccountVariable *hybrid_variable_create(HybridAccountVariableType type,
+                                              const gchar *var_name,
+                                              const gchar *var_title);
 
 /**
  * Destroy an variable object.
@@ -375,8 +375,8 @@ void hybrid_variable_set_bool_default(HybridAccountVariable *var,
  * @param value   The value of the variable.
  */
 void hybrid_account_set_string_variable(HybridAccount *account,
-										const gchar	  *name,
-										const gchar	  *value);
+                                        const gchar *name,
+                                        const gchar *value);
 
 /**
  * Get the value of an user-defined string variable.
@@ -387,7 +387,7 @@ void hybrid_account_set_string_variable(HybridAccount *account,
  * @return The value of the string variable.
  */
 const gchar* hybrid_account_get_string_variable(HybridAccount *account,
-												const gchar	  *name);
+                                                const gchar *name);
 
 /**
  * Set the boolean value for a user-defined variable.
@@ -396,9 +396,9 @@ const gchar* hybrid_account_get_string_variable(HybridAccount *account,
  * @param name    The name of the boolean variable.
  * @param value   The value of the boolean variable.
  */
-void hybrid_account_set_bool_variable(HybridAccount	*account,
-									  const gchar	*name,
-									  gboolean		 value);
+void hybrid_account_set_bool_variable(HybridAccount *account,
+                                      const gchar *name,
+                                      gboolean value);
 
 /**
  * Get the value of an user-defined boolean variable.
@@ -408,8 +408,8 @@ void hybrid_account_set_bool_variable(HybridAccount	*account,
  *
  * @return The value of the boolean variable.
  */
-gboolean hybrid_account_get_bool_variable(HybridAccount	*account,
-										  const gchar	*name);
+gboolean hybrid_account_get_bool_variable(HybridAccount *account,
+                                          const gchar *name);
 
 
 /**
@@ -420,8 +420,8 @@ gboolean hybrid_account_get_bool_variable(HybridAccount	*account,
  * @param value   The value of the integer variable.
  */
 void hybrid_account_set_int_variable(HybridAccount *account,
-									 const gchar   *name,
-									 gint			value);
+                                     const gchar   *name,
+                                     gint value);
 
  /**
  * Get the value of an user-defined integer variable.
@@ -432,7 +432,7 @@ void hybrid_account_set_int_variable(HybridAccount *account,
  * @return The value of the integer variable.
  */
 gint hybrid_account_get_int_variable(HybridAccount *account,
-									 const gchar   *name);
+                                     const gchar   *name);
 
 #ifdef __cplusplus
 }
