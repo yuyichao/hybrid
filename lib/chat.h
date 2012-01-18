@@ -63,14 +63,13 @@ typedef enum {
 
 /* Abstract structure for a chat session */
 /* signals: notify get-message send-message destroy */
-/*  new(for showing dialog, with para in/out) */
+/*  new(for showing dialog, with detail) */
 struct _HybridChatSession {
     /* For properties and signals. */
     GObject parent;
     HybridAccount *account;
 
     gchar *id;
-    gboolean presented;
 
     GList *messages;
 
@@ -84,7 +83,6 @@ struct _HybridChatSession {
 struct _HybridChatSessionClass {
     GObjectClass parent_class;
 };
-
 
 #ifdef __cplusplus
 extern "C" {
