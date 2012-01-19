@@ -570,6 +570,7 @@ hybrid_pref_win_new(HybridPref *pref, const gchar *title)
                                                    GTK_STOCK_CANCEL,
                                                    GTK_RESPONSE_REJECT,
                                                    NULL);
+    gtk_window_set_role(pref_win->pref, "preferences");
     icon = hybrid_create_default_icon(0);
     gtk_window_set_icon(GTK_WINDOW(pref_win->window), icon);
     gtk_window_set_resizable(GTK_WINDOW(pref_win->window), FALSE);
