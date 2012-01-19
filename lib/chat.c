@@ -20,9 +20,13 @@
 
 #include "chat.h"
 
+//half an hour
+//TODO: preference
+#define HYBRID_CHAT_SESSION_TIMEOUT 1800
+
 enum {
     HYBRID_CHAT_SESSION_NEW,
-    HYBRID_CHAT_SESSION_ACTIVATE,
+    HYBRID_CHAT_SESSION_PRESENT,
     HYBRID_CHAT_SESSION_NEW_MESSAGE,
     HYBRID_CHAT_SESSION_DESTROY,
     HYBRID_CHAT_SESSION_LAST_SIGNAL
@@ -83,7 +87,7 @@ _hybrid_chat_session_init(HybridChatSession *session)
     session->id = NULL;
     session->title = NULL;
     session->messages = NULL;
-    session->presented = FALSE;
+    session->timeout = 0;
 }
 
 static void
@@ -138,10 +142,10 @@ _hybrid_chat_session_class_init(HybridChatSessionClass *sessionclass)
     /* for hook only */
     hybrid_chat_session_signals[HYBRID_CHAT_SESSION_NEW] =
         g_signal_new("new", HYBRID_TYPE_CHAT_SESSION,
-                     G_SIGNAL_RUN_FIRST | G_SIGNAL_DETAILED, 0, NULL,NULL,
+                     G_SIGNAL_RUN_FIRST, 0, NULL,NULL,
                      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, NULL);
-    hybrid_chat_session_signals[HYBRID_CHAT_SESSION_ACTIVATE] =
-        g_signal_new("activate", HYBRID_TYPE_CHAT_SESSION,
+    hybrid_chat_session_signals[HYBRID_CHAT_SESSION_PRESENT] =
+        g_signal_new("present", HYBRID_TYPE_CHAT_SESSION,
                      G_SIGNAL_RUN_FIRST | G_SIGNAL_DETAILED, 0, NULL,NULL,
                      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, NULL);
     hybrid_chat_session_signals[HYBRID_CHAT_SESSION_NEW_MESSAGE] =
@@ -185,6 +189,7 @@ _hybrid_chat_session_new(HybridAccount *account, const gchar *id)
     return session;
 }
 
+//Remove after standardize hybrid buddy
 typedef struct {
     HybridAccount *account;
     const gchar *id;
@@ -213,12 +218,50 @@ _hybrid_find_chat_session(HybridAccount *account, const gchar *id)
     return res ? (HybridChatSession*)res->data : NULL;
 }
 
+static gboolean
+_hybrid_chat_session_unref_cb(HybridChatSession *session)
+{
+    g_return_val_if_fail(HYBRID_IS_CHAT_SESSION(session), FALSE);
+
+    session->timeout = 0;
+    g_object_unref(session);
+
+    return FALSE;
+}
+
+static gboolean
+_hybrid_chat_session_add_to(HybridChatSession *session)
+{
+    //LOCK?
+    if (session->to)
+        return FALSE;
+
+    session->to = g_timeout_add_second(
+        HYBRID_CHAT_SESSION_TIMEOUT,
+        (GSourceFunc)_hybrid_chat_session_unref_cb, session);
+
+    return TRUE;
+}
+
+static gboolean
+_hybrid_chat_session_rm_to(HybridChatSession *session)
+{
+    if (!session->to)
+        return FALSE;
+
+    g_source_remove(session->to);
+
+    session->to = 0;
+
+    return TRUE;
+}
+
 HybridChatSession*
 hybrid_chat_session_newv(HybridAccount *account, const gchar *id,
                          const gchar *first_prop_name, va_list var_args)
 {
     HybridChatSession *session;
-    //LOCK
+    //LOCK?
     session = _hybrid_find_chat_session(account, id);
 
     if (!session) {
@@ -228,6 +271,9 @@ hybrid_chat_session_newv(HybridAccount *account, const gchar *id,
     }
 
     g_object_set_valist(G_OBJECT(session), first_prop_name, var_args);
+    g_signal_emit(session,
+                  hybrid_chat_session_signals[HYBRID_CHAT_SESSION_NEW], NULL);
+    _hybrid_chat_session_add_to(session);
     return session;
 }
 
@@ -306,21 +352,9 @@ hybrid_chat_session_new_default(HybridAccount *account, const gchar *id,
 void
 hybrid_chat_session_present(HybridChatSession *session, const gchar *hint)
 {
-    if (session->presented) {
-        g_signal_emit(session,
-                      hybrid_chat_session_signals[HYBRID_CHAT_SESSION_ACTIVATE],
-                      g_quark_from_string(hint));
-    } else {
-        //LOCK
-        session->presented = TRUE;
-        g_signal_emit(session,
-                      hybrid_chat_session_signals[HYBRID_CHAT_SESSION_NEW],
-                      g_quark_from_string(hint));
-    }
-
-    /* any (sub)system that need it should add hook to proper signal(s) *
-     * and increase the reference count.                                */
-    g_object_unref(session);
+    g_signal_emit(session,
+                  hybrid_chat_session_signals[HYBRID_CHAT_SESSION_PRESENT],
+                  g_quark_from_string(hint));
 }
 
 
@@ -445,6 +479,17 @@ hybrid_chat_session_got_message(HybridChatSession *session,
                   g_quark_from_static_string("out"), msg);
 }
 
+gint *
+hybrid_chat_session_get_filter(HybridChatSession *session, const gchat* name)
+{
+    gint *res;
+
+    if (!(res = g_object_get_data(G_OBJECT(session), name))) {
+        res = g_new0(gint, 1);
+        g_object_set_data_full(G_OBJECT(session), name, res, g_free);
+    }
+    return res;
+}
 
 HybridMessage*
 hybrid_message_new(time_t time, gboolean in)

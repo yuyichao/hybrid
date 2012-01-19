@@ -65,13 +65,14 @@ typedef enum {
 /* signals: notify get-message send-message destroy */
 /*  new(for showing dialog, with detail) */
 struct _HybridChatSession {
-    /* For properties and signals. */
+    /* For properties and signals and many things else. */
     GObject parent;
     HybridAccount *account;
-
     gchar *id;
 
     GList *messages;
+
+    gint timeout;
 
     /* Properties. */
     gboolean unread;
@@ -137,6 +138,8 @@ extern "C" {
     void hybrid_chat_session_got_message(HybridChatSession *session,
                                          HybridMessage *msg);
 
+    gint *hybrid_chat_session_get_filter(HybridChatSession *session,
+                                         const gchar* name);
 
     HybridMessage *hybrid_message_new(time_t time, gboolean in);
     void hybrid_message_free(HybridMessage *msg);
