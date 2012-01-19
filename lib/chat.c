@@ -479,16 +479,27 @@ hybrid_chat_session_got_message(HybridChatSession *session,
                   g_quark_from_static_string("out"), msg);
 }
 
-gint *
+void
+hybrid_chat_session_set_filter(HybridChatSession *session,
+                               const gchat* name, gint value)
+{
+    guint old = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(session), name));
+    g_object_set_data(G_OBJECT(session), name, GINT_TO_POINTER(value));
+
+    if (!((!old) ^ (!value)))
+        return;
+
+    if (value) {
+        g_object_ref(session);
+    } else {
+        g_object_unref(session);
+    }
+}
+
+gint
 hybrid_chat_session_get_filter(HybridChatSession *session, const gchat* name)
 {
-    gint *res;
-
-    if (!(res = g_object_get_data(G_OBJECT(session), name))) {
-        res = g_new0(gint, 1);
-        g_object_set_data_full(G_OBJECT(session), name, res, g_free);
-    }
-    return res;
+    return GPOINTER_TO_INT(g_object_get_data(G_OBJECT(session), name));
 }
 
 HybridMessage*

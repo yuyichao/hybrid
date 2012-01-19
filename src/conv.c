@@ -31,6 +31,8 @@
 #include "util.h"
 #include "module.h"
 
+#define HYBRID_GUI_FILTER "hybrid_gui"
+
 static HybridChatTextOps *text_ops = NULL;
 
 /* The list of the currently opened conversation dialogs. */
@@ -51,9 +53,9 @@ static HybridChatTheme theme_list[] = {
     }
 };
 
-static gboolean hybrid_new_session_hook(GSignalInvocationHint *ihint,
-                                        guint n, const GValue *params,
-                                        gpointer data);
+static gboolean hybrid_present_session_hook(GSignalInvocationHint *ihint,
+                                            guint n, const GValue *params,
+                                            gpointer data);
 static void hybrid_chat_session_filter(HybridChatSession *session,
                                        GQuark detail);
 
@@ -64,19 +66,16 @@ static gboolean key_press_func(GtkWidget *widget, GdkEventKey *event,
 static HybridChatWindow*
 hybrid_chat_window_create(HybridChatSession *session);
 
-static GHashTable *filter_results = NULL;
-
 void hybrid_chat_window_init()
 {
-    g_signal_add_emission_hook(g_signal_lookup("new",
+    g_signal_add_emission_hook(g_signal_lookup("present",
                                                HYBRID_TYPE_CHAT_SESSION),
-                               0, hybrid_new_session_hook, NULL, NULL);
-    filter_results = g_hash_table_new(NULL, NULL);
+                               0, hybrid_present_session_hook, NULL, NULL);
 }
 
 static gboolean
-hybrid_new_session_hook(GSignalInvocationHint *ihint, guint n,
-                        const GValue *params, gpointer data)
+hybrid_present_session_hook(GSignalInvocationHint *ihint, guint n,
+                            const GValue *params, gpointer data)
 {
     hybrid_chat_session_filter(
         HYBRID_CHAT_SESSION(g_value_get_object(params)), ihint->detail);
@@ -100,6 +99,8 @@ hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
     static GQuark receive = 0;
     static GQuark state = 0;
     static GQuark group = 0;
+    HybridFilter old_filter;
+    HybridFilter action;
 
     if (!send)
         send = g_quark_from_static_string("send");
@@ -110,8 +111,10 @@ hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
     if (!group)
         group = g_quark_from_static_string("group");
 
-    //~~ not a flexible implement, use for now.
-    HybridFilter action;
+    old_filter = hybrid_chat_session_get_filter(session, HYBRID_GUI_FILTER);
+
+
+    /* Start of filter */
     if (!detail) {
         hybrid_debug_warning(__func__, "New Session with hint NULL. "
                              "Treat as sending.");
@@ -124,39 +127,37 @@ hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
     } else if (detail == state) {
         action = HYBRID_FILTER_IGNORE;
     } else if (detail == group) {
-        action = HYBRID_FILTER_GROUP;
+        action = HYBRID_FILTER_IGNORE;
+        //TODO: action = HYBRID_FILTER_GROUP;
     } else {
         hybrid_debug_error(__func__, "New Session with unknown hint %s. "
                            "Treat as sending.", g_quark_to_string(detail));
         goto send;
     }
+    //TODO: the windows should register for present signal it self in order to
+    // perform necessary actions
+    if ((old_filter & HYBRID_FILTER_NEW_WINDOW) &&
+        (action & HYBRID_FILTER_NEW_WINDOW))
+        action &= ~HYBRID_FILTER_NEW_WINDOW;
+    if ((old_filter & HYBRID_FILTER_GROUP) &&
+        (action & HYBRID_FILTER_GROUP))
+        action &= ~HYBRID_FILTER_GROUP
+    /* End of filter */
 
-    /* if (action) */
-    /*     g_hash_table_insert(filter_results, session, action); */
+    hybrid_chat_session_set_filter(session, HYBRID_GUI_FILTER,
+                                   old_filter | action);
 
-    switch (action) {
-    case HYBRID_FILTER_NEW_WINDOW:
-        /* maybe will deal with the reference count in the create function. */
-        g_object_ref(session);
-        g_hash_table_insert(filter_results, session, GINT_TO_POINTER(action));
+    if (action & HYBRID_FILTER_NEW_WINDOW) {
         hybrid_chat_window_create(session);
-        break;
-    case HYBRID_FILTER_NOTIFY:
-        /* Haven't done yet. */
-        //g_object_ref(session);
-        break;
-    case HYBRID_FILTER_POPUP_WINDOW:
-        /* Haven't done either. */
-        //g_object_ref(session);
-        break;
-    case HYBRID_FILTER_GROUP:
-        /* ~~~ */
-        //g_object_ref(session);
-        break;
-    case HYBRID_FILTER_IGNORE:
-        break;
-    default:
-        hybrid_debug_error(__func__, "Unknow action %d.", action);
+    }
+    if (action & HYBRID_FILTER_NOTIFY) {
+
+    }
+    if (action & HYBRID_FILTER_POPUP_WINDOW) {
+
+    }
+    if (action & HYBRID_FILTER_GROUP) {
+
     }
 }
 
