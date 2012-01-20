@@ -139,9 +139,11 @@ extern "C" {
                                          HybridMessage *msg);
 
     void hybrid_chat_session_set_filter(HybridChatSession *session,
-                                        const gchar* name, gint value);
-    gint hybrid_chat_session_get_filter(HybridChatSession *session,
-                                        const gchar* name);
+                                        const gchar* name, guint value);
+    guint hybrid_chat_session_get_filter(HybridChatSession *session,
+                                         const gchar* name);
+    guint hybrid_chat_session_erase_filter(HybridChatSession *session,
+                                           const gchar* name, guint mask);
 
     HybridMessage *hybrid_message_new(time_t time, gboolean in);
     void hybrid_message_free(HybridMessage *msg);

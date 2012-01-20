@@ -528,7 +528,7 @@ close_tab(HybridChatWindow *chat)
     conv = chat->parent;
 
     page_index = gtk_notebook_page_num(GTK_NOTEBOOK(conv->notebook),
-            chat->vbox);
+                                       chat->vbox);
     gtk_notebook_remove_page(GTK_NOTEBOOK(conv->notebook), page_index);
 
     conv->chat_buddies = g_slist_remove(conv->chat_buddies, chat);
