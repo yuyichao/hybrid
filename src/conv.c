@@ -141,7 +141,7 @@ hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
         action &= ~HYBRID_FILTER_NEW_WINDOW;
     if ((old_filter & HYBRID_FILTER_GROUP) &&
         (action & HYBRID_FILTER_GROUP))
-        action &= ~HYBRID_FILTER_GROUP
+        action &= ~HYBRID_FILTER_GROUP;
     /* End of filter */
 
     hybrid_chat_session_set_filter(session, HYBRID_GUI_FILTER,
@@ -227,7 +227,7 @@ switch_page_cb(GtkNotebook *notebook, gpointer newpage, guint newpage_nth,
         chat = (HybridChatWindow*)pos->data;
 
         page_index = gtk_notebook_page_num(GTK_NOTEBOOK(conv->notebook),
-                chat->vbox);
+                                           chat->vbox);
 
         if (page_index == newpage_nth) {
             goto page_found;
@@ -541,11 +541,11 @@ close_tab(HybridChatWindow *chat)
         gtk_notebook_set_show_tabs(GTK_NOTEBOOK(conv->notebook), FALSE);
     }
 
-    /* TODO inplement a chat_window_destroy(). */
+    /* TODO implement a chat_window_destroy(). */
     if (chat->input_source) {
         g_source_remove(chat->input_source);
     }
-    g_free(chat->title);
+    //g_free(chat->title);
     g_free(chat);
 
     if (conv->chat_buddies == NULL) {
@@ -1346,8 +1346,8 @@ hybrid_chat_window_create(HybridChatSession *session)
     HybridChatWindow   *chat = NULL;
     HybridConversation *conv = NULL;
     HybridBuddy        *buddy;
-    /* HybridModule       *proto; */
-    /* HybridIMOps        *ops; */
+    HybridModule       *proto;
+    HybridIMOps        *ops;
 
     g_return_val_if_fail(account != NULL, NULL);
     g_return_val_if_fail(id != NULL, NULL);
@@ -1357,16 +1357,16 @@ hybrid_chat_window_create(HybridChatSession *session)
         hybrid_debug_warning("conv", "FATAL, can't find buddy.");
     }
 
-    /* proto = account->proto; */
-    /* ops = proto->info->im_ops; */
+    proto = account->proto;
+    ops = proto->info->im_ops;
 
     /* we will check whether the protocol allows this buddy to be activated. */
     /* TODO check this in chat.c */
-    /* if (ops->chat_start) { */
-    /*     if (!ops->chat_start(account, buddy)) { */
-    /*         return NULL; */
-    /*     } */
-    /* } */
+    if (ops->chat_start) {
+        if (!ops->chat_start(account, buddy)) {
+            return NULL;
+        }
+    }
 
     /* if ((chat = hybrid_conv_find_chat(id))) { */
     /*     conv = chat->parent; */
@@ -1393,7 +1393,6 @@ hybrid_chat_window_create(HybridChatSession *session)
     chat->id      = g_strdup(session->id);
     chat->parent  = conv;
     chat->account = account;
-    /* chat->type    = type; */
     //TODO add hook for log (in log_init())
     //chat->logs    = hybrid_logs_create(account, id);
 

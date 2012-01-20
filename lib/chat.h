@@ -72,7 +72,7 @@ struct _HybridChatSession {
 
     GList *messages;
 
-    gint timeout;
+    gint to;
 
     /* Properties. */
     gboolean unread;

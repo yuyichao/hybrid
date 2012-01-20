@@ -87,7 +87,7 @@ _hybrid_chat_session_init(HybridChatSession *session)
     session->id = NULL;
     session->title = NULL;
     session->messages = NULL;
-    session->timeout = 0;
+    session->to = 0;
 }
 
 static void
@@ -223,7 +223,7 @@ _hybrid_chat_session_unref_cb(HybridChatSession *session)
 {
     g_return_val_if_fail(HYBRID_IS_CHAT_SESSION(session), FALSE);
 
-    session->timeout = 0;
+    session->to = 0;
     g_object_unref(session);
 
     return FALSE;
@@ -236,7 +236,7 @@ _hybrid_chat_session_add_to(HybridChatSession *session)
     if (session->to)
         return FALSE;
 
-    session->to = g_timeout_add_second(
+    session->to = g_timeout_add_seconds(
         HYBRID_CHAT_SESSION_TIMEOUT,
         (GSourceFunc)_hybrid_chat_session_unref_cb, session);
 
@@ -272,7 +272,7 @@ hybrid_chat_session_newv(HybridAccount *account, const gchar *id,
 
     g_object_set_valist(G_OBJECT(session), first_prop_name, var_args);
     g_signal_emit(session,
-                  hybrid_chat_session_signals[HYBRID_CHAT_SESSION_NEW], NULL);
+                  hybrid_chat_session_signals[HYBRID_CHAT_SESSION_NEW], 0);
     _hybrid_chat_session_add_to(session);
     return session;
 }
@@ -481,7 +481,7 @@ hybrid_chat_session_got_message(HybridChatSession *session,
 
 void
 hybrid_chat_session_set_filter(HybridChatSession *session,
-                               const gchat* name, gint value)
+                               const gchar* name, gint value)
 {
     guint old = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(session), name));
     g_object_set_data(G_OBJECT(session), name, GINT_TO_POINTER(value));
@@ -497,7 +497,7 @@ hybrid_chat_session_set_filter(HybridChatSession *session,
 }
 
 gint
-hybrid_chat_session_get_filter(HybridChatSession *session, const gchat* name)
+hybrid_chat_session_get_filter(HybridChatSession *session, const gchar* name)
 {
     return GPOINTER_TO_INT(g_object_get_data(G_OBJECT(session), name));
 }
