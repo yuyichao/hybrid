@@ -100,7 +100,7 @@ hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
     static GQuark state = 0;
     static GQuark group = 0;
     HybridFilter old_filter;
-    HybridFilter action;
+    HybridFilter action = HYBRID_FILTER_NONE;
 
     if (!send)
         send = g_quark_from_static_string("send");
@@ -130,25 +130,26 @@ hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
         action = HYBRID_FILTER_IGNORE;
         //TODO: action = HYBRID_FILTER_GROUP;
     } else {
-        hybrid_debug_error(__func__, "New Session with unknown hint %s. "
-                           "Treat as sending.", g_quark_to_string(detail));
-        goto send;
+        return;
     }
-    //TODO: the windows should register for present signal it self in order to
-    // perform necessary actions
+    /* End of filter */
+
+    hybrid_chat_session_set_filter(session, HYBRID_GUI_FILTER,
+                                   old_filter | action);
+
     if ((old_filter & HYBRID_FILTER_NEW_WINDOW) &&
         (action & HYBRID_FILTER_NEW_WINDOW))
         action &= ~HYBRID_FILTER_NEW_WINDOW;
     if ((old_filter & HYBRID_FILTER_GROUP) &&
         (action & HYBRID_FILTER_GROUP))
         action &= ~HYBRID_FILTER_GROUP;
-    /* End of filter */
-
-    hybrid_chat_session_set_filter(session, HYBRID_GUI_FILTER,
-                                   old_filter | action);
-
     if (action & HYBRID_FILTER_NEW_WINDOW) {
-        hybrid_chat_window_create(session);
+        if (old_filter & HYBRID_FILTER_NEW_WINDOW) {
+            g_signal_emit_by_name(session,
+                                  "present::"HYBRID_GUI_FILTER"_window");
+        } else {
+            hybrid_chat_window_create(session);
+        }
     }
     if (action & HYBRID_FILTER_NOTIFY) {
 
@@ -157,7 +158,11 @@ hybrid_chat_session_filter(HybridChatSession *session, GQuark detail)
 
     }
     if (action & HYBRID_FILTER_GROUP) {
-
+        if (old_filter & HYBRID_FILTER_GROUP) {
+            g_signal_emit_by_name(session,
+                                  "present::"HYBRID_GUI_FILTER"_group");
+        } else {
+        }
     }
 }
 
@@ -187,7 +192,6 @@ conv_destroy_cb(GtkWidget *widget, gpointer user_data)
 
     /* First we should free the memory in the list of HybridChatWindow. */
     while (conv->chat_buddies) {
-
         pos = conv->chat_buddies;
 
         temp_chat          = (HybridChatWindow*)pos->data;
@@ -985,8 +989,8 @@ create_note_label(HybridChatWindow *chat)
     label = gtk_cell_view_new();
 
     store = gtk_list_store_new(TAB_COLUMNS,
-            GDK_TYPE_PIXBUF,
-            G_TYPE_STRING);
+                               GDK_TYPE_PIXBUF,
+                               G_TYPE_STRING);
 
     gtk_cell_view_set_model(GTK_CELL_VIEW(label), GTK_TREE_MODEL(store));
 
@@ -996,14 +1000,14 @@ create_note_label(HybridChatWindow *chat)
     renderer = gtk_cell_renderer_pixbuf_new();
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(label), renderer, FALSE);
     gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(label), renderer,
-            "pixbuf", TAB_STATUS_ICON_COLUMN, NULL);
+                                   "pixbuf", TAB_STATUS_ICON_COLUMN, NULL);
     g_object_set(renderer, "yalign", 0.5, "xpad", 3, "ypad", 0, NULL);
 
     /* buddy name renderer */
     renderer = gtk_cell_renderer_text_new();
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(label), renderer, TRUE);
     gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(label), renderer,
-            "markup", TAB_NAME_COLUMN, NULL);
+                                   "markup", TAB_NAME_COLUMN, NULL);
 
     g_object_set(renderer, "xalign", 0.5, "xpad", 6, "ypad", 0, NULL);
     g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
@@ -1014,8 +1018,8 @@ create_note_label(HybridChatWindow *chat)
     gtk_cell_view_set_displayed_row(GTK_CELL_VIEW(label), path);
     gtk_tree_path_free(path);
 
-    if (IS_SYSTEM_CHAT(chat)) {
-
+    //TODO
+    {
         buddy = chat->data;
 
         icon_pixbuf = hybrid_create_presence_pixbuf(buddy->state, 16);
@@ -1033,16 +1037,16 @@ create_note_label(HybridChatWindow *chat)
     gtk_container_add(GTK_CONTAINER(eventbox), label);
     gtk_box_pack_start(GTK_BOX(hbox), eventbox, TRUE, TRUE, 0);
     gtk_widget_add_events(eventbox,
-            GDK_POINTER_MOTION_MASK | GDK_LEAVE_NOTIFY_MASK);
+                          GDK_POINTER_MOTION_MASK | GDK_LEAVE_NOTIFY_MASK);
     g_signal_connect(G_OBJECT(eventbox), "button-press-event",
-            G_CALLBACK(tab_press_cb), chat);
+                     G_CALLBACK(tab_press_cb), chat);
 
     /* close button */
     eventbox = gtk_event_box_new();
     gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox), FALSE);
     close_image = gtk_image_new_from_file(PIXMAPS_DIR"menus/close.png");
     g_signal_connect(G_OBJECT(eventbox), "button-press-event",
-            G_CALLBACK(tab_close_press_cb), chat);
+                     G_CALLBACK(tab_close_press_cb), chat);
     gtk_container_add(GTK_CONTAINER(eventbox), close_image);
 
     gtk_box_pack_start(GTK_BOX(hbox), eventbox, FALSE, FALSE, 0);
@@ -1104,14 +1108,14 @@ create_buddy_tips_panel(GtkWidget *vbox, HybridChatWindow *chat)
     renderer = gtk_cell_renderer_pixbuf_new();
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(cellview), renderer, FALSE);
     gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(cellview), renderer,
-            "pixbuf", BUDDY_ICON_COLUMN, NULL);
+                                   "pixbuf", BUDDY_ICON_COLUMN, NULL);
     g_object_set(renderer, "yalign", 0.5, "xpad", 3, "ypad", 0, NULL);
 
     /* buddy name renderer */
     renderer = gtk_cell_renderer_text_new();
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(cellview), renderer, TRUE);
     gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(cellview), renderer,
-            "markup", BUDDY_NAME_COLUMN, NULL);
+                                   "markup", BUDDY_NAME_COLUMN, NULL);
     g_object_set(renderer, "xalign", 0.0, "xpad", 6, "ypad", 0, NULL);
     g_object_set(renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
 
@@ -1119,14 +1123,14 @@ create_buddy_tips_panel(GtkWidget *vbox, HybridChatWindow *chat)
     renderer = gtk_cell_renderer_pixbuf_new();
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(cellview), renderer, FALSE);
     gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(cellview), renderer,
-            "pixbuf", BUDDY_PROTO_ICON_COLUMN, NULL);
+                                   "pixbuf", BUDDY_PROTO_ICON_COLUMN, NULL);
     g_object_set(renderer, "xalign", 0.0, "xpad", 6, "ypad", 0, NULL);
 
     /* status icon renderer */
     renderer = gtk_cell_renderer_pixbuf_new();
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(cellview), renderer, FALSE);
     gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(cellview), renderer,
-            "pixbuf", BUDDY_STATUS_ICON_COLUMN, NULL);
+                                   "pixbuf", BUDDY_STATUS_ICON_COLUMN, NULL);
     g_object_set(renderer, "xalign", 0.0, "xpad", 6, "ypad", 0, NULL);
 
     gtk_list_store_append(store, &chat->tipiter);
@@ -1136,36 +1140,34 @@ create_buddy_tips_panel(GtkWidget *vbox, HybridChatWindow *chat)
 
     chat->tiplabel = cellview;
 
-    if (IS_SYSTEM_CHAT(chat)) {
+    //TODO
+    buddy = chat->data;
+    hybrid_tooltip_setup(eventbox, NULL, NULL, init_tooltip, buddy);
 
-        buddy = chat->data;
-        hybrid_tooltip_setup(eventbox, NULL, NULL, init_tooltip, buddy);
+    icon_pixbuf = hybrid_create_round_pixbuf(buddy->icon_data,
+                                             buddy->icon_data_length, 32);
 
-        icon_pixbuf = hybrid_create_round_pixbuf(buddy->icon_data,
-                        buddy->icon_data_length, 32);
+    presence_pixbuf = hybrid_create_presence_pixbuf(buddy->state, 16);
 
-        presence_pixbuf = hybrid_create_presence_pixbuf(buddy->state, 16);
+    mood_text = g_markup_escape_text(buddy->mood ? buddy->mood : "", -1);
 
-        mood_text = g_markup_escape_text(buddy->mood ? buddy->mood : "", -1);
+    name_text = g_strdup_printf(
+        "<b>%s</b>\n<small><span font=\"#8f8f8f\">%s</span></small>",
+        buddy->name && *(buddy->name) != '\0' ? buddy->name : buddy->id,
+        mood_text);
 
-        name_text = g_strdup_printf(
-                "<b>%s</b>\n<small><span font=\"#8f8f8f\">%s</span></small>",
-                buddy->name && *(buddy->name) != '\0' ? buddy->name : buddy->id,
-                mood_text);
+    gtk_list_store_set(store, &chat->tipiter,
+                       BUDDY_ICON_COLUMN, icon_pixbuf,
+                       BUDDY_NAME_COLUMN, name_text,
+                       BUDDY_STATUS_ICON_COLUMN, presence_pixbuf, -1);
 
-        gtk_list_store_set(store, &chat->tipiter,
-                           BUDDY_ICON_COLUMN, icon_pixbuf,
-                           BUDDY_NAME_COLUMN, name_text,
-                           BUDDY_STATUS_ICON_COLUMN, presence_pixbuf, -1);
+    g_object_unref(icon_pixbuf);
+    g_object_unref(presence_pixbuf);
 
-        g_object_unref(icon_pixbuf);
-        g_object_unref(presence_pixbuf);
+    g_free(name_text);
+    g_free(mood_text);
 
-        g_free(name_text);
-        g_free(mood_text);
-    }
-
-    account = chat->account;
+    account = chat->session->account;
     proto   = account->proto;
 
     proto_pixbuf = hybrid_create_proto_icon(proto->info->name, 16);
@@ -1182,7 +1184,7 @@ static void
 init_chat_window_body(GtkWidget *vbox, HybridChatWindow *chat)
 {
     GtkWidget     *scroll;
-    GtkWidget     *button;
+    //GtkWidget     *button;
     GtkWidget     *image_icon;
     GtkWidget     *limit_label;
     GtkTextBuffer *send_buffer;
@@ -1202,13 +1204,13 @@ init_chat_window_body(GtkWidget *vbox, HybridChatWindow *chat)
     scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_box_pack_start(GTK_BOX(vbox), scroll, TRUE, TRUE, 0);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
-            GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scroll),
-            GTK_SHADOW_ETCHED_IN);
+                                        GTK_SHADOW_ETCHED_IN);
 
     chat->textview = text_ops->create();
     g_signal_connect(chat->textview, "focus-in-event",
-                    GTK_SIGNAL_FUNC(focus_in_cb), chat);
+                     GTK_SIGNAL_FUNC(focus_in_cb), chat);
     gtk_container_add(GTK_CONTAINER(scroll), chat->textview);
 
     /* create toolbar */
@@ -1217,43 +1219,45 @@ init_chat_window_body(GtkWidget *vbox, HybridChatWindow *chat)
     gtk_box_pack_start(GTK_BOX(vbox), chat->toolbar, FALSE, FALSE, 0);
 
     image_icon = gtk_image_new_from_file(PIXMAPS_DIR"menus/logs.png");
-    button = gtk_toolbar_append_item(GTK_TOOLBAR(chat->toolbar),
-            _("Chat logs"), _("View chat logs"), NULL, image_icon,
-            NULL, NULL);
+    //button =
+    gtk_toolbar_append_item(GTK_TOOLBAR(chat->toolbar), _("Chat logs"),
+                            _("View chat logs"), NULL, image_icon, NULL, NULL);
 
-    if (IS_SYSTEM_CHAT(chat)) {
-        gtk_toolbar_append_space(GTK_TOOLBAR(chat->toolbar));
-        image_icon = gtk_image_new_from_file(PIXMAPS_DIR"menus/nudge.png");
-        button = gtk_toolbar_append_item(GTK_TOOLBAR(chat->toolbar),
-                _("Screen jitter"), _("Send a screen jitter"), NULL,
-                image_icon, NULL, NULL);
-        gtk_toolbar_append_space(GTK_TOOLBAR(chat->toolbar));
+    //TODO
+    gtk_toolbar_append_space(GTK_TOOLBAR(chat->toolbar));
+    image_icon = gtk_image_new_from_file(PIXMAPS_DIR"menus/nudge.png");
+    //button =
+    gtk_toolbar_append_item(GTK_TOOLBAR(chat->toolbar),
+                            _("Screen jitter"), _("Send a screen jitter"),
+                            NULL, image_icon, NULL, NULL);
+    gtk_toolbar_append_space(GTK_TOOLBAR(chat->toolbar));
 
-        account = chat->account;
-        module    = account->proto;
-        ops        = module->info->im_ops;
+    account = chat->session->account;
+    module  = account->proto;
+    ops     = module->info->im_ops;
 
-        if (ops->chat_word_limit &&
-            (word_limit = ops->chat_word_limit(account)) > 0) {
+    if (ops->chat_word_limit &&
+        (word_limit = ops->chat_word_limit(account)) > 0) {
 
-            word_limit_string =
-                g_strdup_printf(_("Total %d character, left "), word_limit);
+        word_limit_string =
+            g_strdup_printf(_("Total %d character, left "), word_limit);
 
-            limit_label = gtk_label_new(word_limit_string);
+        limit_label = gtk_label_new(word_limit_string);
 
-            g_free(word_limit_string);
+        g_free(word_limit_string);
 
-            word_limit_string =
-                g_strdup_printf(_("[<span color='#0099ff'>%d</span>] characters"),
-                        word_limit);
+        word_limit_string =
+            g_strdup_printf(_("[<span color='#0099ff'>%d</span>] characters"),
+                            word_limit);
 
-            chat->words_left_label = gtk_label_new(NULL);
-            gtk_label_set_markup(GTK_LABEL(chat->words_left_label), word_limit_string);
-            g_free(word_limit_string);
+        chat->words_left_label = gtk_label_new(NULL);
+        gtk_label_set_markup(GTK_LABEL(chat->words_left_label),
+                             word_limit_string);
+        g_free(word_limit_string);
 
-            gtk_container_add(GTK_CONTAINER(chat->toolbar), limit_label);
-            gtk_container_add(GTK_CONTAINER(chat->toolbar), chat->words_left_label);
-        }
+        gtk_container_add(GTK_CONTAINER(chat->toolbar), limit_label);
+        gtk_container_add(GTK_CONTAINER(chat->toolbar),
+                          chat->words_left_label);
     }
 
     gtk_widget_show_all(chat->toolbar);
@@ -1262,24 +1266,24 @@ init_chat_window_body(GtkWidget *vbox, HybridChatWindow *chat)
     scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_box_pack_start(GTK_BOX(vbox), scroll, FALSE, FALSE, 0);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
-            GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scroll),
-            GTK_SHADOW_ETCHED_IN);
+                                        GTK_SHADOW_ETCHED_IN);
 
     chat->sendtext = gtk_text_view_new();
     gtk_widget_set_size_request(chat->sendtext, 0, 80);
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(chat->sendtext),
-            GTK_WRAP_WORD_CHAR);
+                                GTK_WRAP_WORD_CHAR);
     gtk_container_add(GTK_CONTAINER(scroll), chat->sendtext);
     g_signal_connect(chat->sendtext, "key_press_event",
-            G_CALLBACK(key_pressed_cb), chat->parent);
+                     G_CALLBACK(key_pressed_cb), chat->parent);
     g_signal_connect(chat->sendtext, "focus-in-event",
-                    GTK_SIGNAL_FUNC(focus_in_cb), chat);
+                     GTK_SIGNAL_FUNC(focus_in_cb), chat);
 
     send_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(chat->sendtext));
 
     g_signal_connect(send_buffer, "changed",
-            G_CALLBACK(sendtext_buffer_changed), chat);
+                     G_CALLBACK(sendtext_buffer_changed), chat);
 
     gtk_window_present(GTK_WINDOW(chat->parent->window));
 
@@ -1289,6 +1293,66 @@ init_chat_window_body(GtkWidget *vbox, HybridChatWindow *chat)
 
     gtk_widget_show_all(scroll);
     gtk_widget_show_all(vbox);
+}
+
+static void
+hybrid_chat_window_present_cb(HybridChatWindow *chat)
+{
+    gtk_window_present(GTK_WINDOW(chat->parent->window));
+    GTK_WIDGET_SET_FLAGS(chat->sendtext, GTK_CAN_FOCUS);
+    gtk_widget_grab_focus(chat->sendtext);
+}
+
+static void
+hybrid_chat_window_got_msg_cb(HybridChatSession *session, HybridMessage *msg,
+                              HybridChatWindow *chat)
+{
+
+}
+
+static void
+hybrid_chat_window_type_state_cb(HybridChatWindow *chat)
+{
+    HybridTypeState state;
+
+    state = hybrid_chat_session_get_buddy_state(chat->session);
+
+    //TODO
+}
+
+static void
+hybrid_chat_window_title_cb(HybridChatWindow *chat)
+{
+    gchat *title;
+
+    title = hybrid_chat_session_get_title(chat->session);
+
+    //TODO
+
+    g_free(title);
+}
+
+static void
+init_chat_window_signal(HybridChatWindow *chat)
+{
+    HybridChatSession *session;
+
+    session = chat->session;
+
+    chat->sig_present = g_signal_connect_swapped(
+        session, "present::"HYBRID_GUI_FILTER"_window",
+        G_CALLBACK(hybrid_chat_window_present_cb), chat);
+
+    chat->sig_got_msg = g_signal_connect(
+        session, "new-message",
+        G_CALLBACK(hybrid_chat_window_got_msg_cb), chat);
+
+    chat->sig_type_state_change = g_signal_connect_swapped(
+        session, "notify::buddy-state",
+        G_CALLBACK(hybrid_chat_window_type_state_cb), chat);
+
+    chat->sig_title = g_signal_connect_swapped(
+        session, "notify::title", G_CALLBACK(hybrid_chat_title_cb), chat);
 }
 
 /**
@@ -1307,7 +1371,6 @@ init_chat_window(HybridChatWindow *chat)
 
     if (g_slist_length(conv->chat_buddies) == 1) {
         gtk_notebook_set_show_tabs(GTK_NOTEBOOK(conv->notebook), FALSE);
-
     } else {
         gtk_notebook_set_show_tabs(GTK_NOTEBOOK(conv->notebook), TRUE);
     }
@@ -1325,6 +1388,7 @@ init_chat_window(HybridChatWindow *chat)
                                        vbox, TRUE, TRUE, GTK_PACK_START);
 
     init_chat_window_body(vbox, chat);
+    init_chat_window_signal(chat);
 
     /*
      * The function should stay here. Because of the following reason:
@@ -1346,28 +1410,26 @@ hybrid_chat_window_create(HybridChatSession *session)
     HybridChatWindow   *chat = NULL;
     HybridConversation *conv = NULL;
     HybridBuddy        *buddy;
-    HybridModule       *proto;
-    HybridIMOps        *ops;
-
-    g_return_val_if_fail(account != NULL, NULL);
-    g_return_val_if_fail(id != NULL, NULL);
+//    HybridModule       *proto;
+//    HybridIMOps        *ops;
 
     if (!(buddy = (hybrid_blist_find_buddy(account, session->id)))) {
         //TODO
         hybrid_debug_warning("conv", "FATAL, can't find buddy.");
     }
 
-    proto = account->proto;
-    ops = proto->info->im_ops;
+//    proto = account->proto;
+//    ops = proto->info->im_ops;
 
     /* we will check whether the protocol allows this buddy to be activated. */
     /* TODO check this in chat.c */
-    if (ops->chat_start) {
-        if (!ops->chat_start(account, buddy)) {
-            return NULL;
-        }
-    }
+    /* if (ops->chat_start) { */
+    /*     if (!ops->chat_start(account, buddy)) { */
+    /*         return NULL; */
+    /*     } */
+    /* } */
 
+    //TODO: register fot present signal.
     /* if ((chat = hybrid_conv_find_chat(id))) { */
     /*     conv = chat->parent; */
     /*     goto found; */
@@ -1390,11 +1452,9 @@ hybrid_chat_window_create(HybridChatSession *session)
     }
 
     chat          = g_new0(HybridChatWindow, 1);
-    chat->id      = g_strdup(session->id);
+    chat->session = session;
     chat->parent  = conv;
-    chat->account = account;
     //TODO add hook for log (in log_init())
-    //chat->logs    = hybrid_logs_create(account, id);
 
     chat->data = buddy;
 
@@ -1403,15 +1463,15 @@ hybrid_chat_window_create(HybridChatSession *session)
     init_chat_window(chat);
     return chat;
 
-found:
-    gtk_notebook_set_current_page(GTK_NOTEBOOK(conv->notebook),
-        gtk_notebook_page_num(GTK_NOTEBOOK(conv->notebook), chat->vbox));
+/* found: */
+/*     gtk_notebook_set_current_page(GTK_NOTEBOOK(conv->notebook), */
+/*         gtk_notebook_page_num(GTK_NOTEBOOK(conv->notebook), chat->vbox)); */
 
-    /* focus the send textview */
-    gtk_widget_grab_focus(chat->sendtext);
-    gtk_window_present(GTK_WINDOW(chat->parent->window));
+/*     /\* focus the send textview *\/ */
+/*     gtk_widget_grab_focus(chat->sendtext); */
+/*     gtk_window_present(GTK_WINDOW(chat->parent->window)); */
 
-    return chat;
+/*     return chat; */
 }
 
 void

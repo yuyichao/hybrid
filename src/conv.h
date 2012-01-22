@@ -67,6 +67,11 @@ struct _HybridChatWindow {
     /* and connect to signal new-message and destroy for every new object */
     //HybridLogs *logs;           /* log context. */
 
+    gulong sig_present;
+    gulong sig_got_msg;
+    gulong sig_type_state_change;
+    gulong sig_title;
+
     GtkWidget *pagelabel;
 
 

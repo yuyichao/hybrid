@@ -179,49 +179,6 @@ _hybrid_chat_session_finalize(GObject *obj)
         g_free(session->title);
 }
 
-static HybridChatSession*
-_hybrid_chat_session_new(HybridAccount *account, const gchar *id)
-{
-    HybridChatSession *session;
-    session = g_object_new(HYBRID_TYPE_CHAT_SESSION, NULL);
-    session->account = account;
-    session->id = g_strdup(id);
-    g_signal_emit(session,
-                  hybrid_chat_session_signals[HYBRID_CHAT_SESSION_NEW], 0);
-    g_object_add_toggle_ref(G_OBJECT(session),
-                            _hybrid_session_toggle_ref_cb, NULL);
-    return session;
-}
-
-//Remove after standardize hybrid buddy
-typedef struct {
-    HybridAccount *account;
-    const gchar *id;
-} HybridBuddyTemp;
-
-static gint
-hybrid_buddy_comp(HybridChatSession *session, HybridBuddyTemp *buddy)
-{
-    if (session->account == buddy->account &&
-        !(g_strcmp0(session->id, buddy->id)))
-        return 0;
-    return 1;
-}
-
-static HybridChatSession*
-_hybrid_find_chat_session(HybridAccount *account, const gchar *id)
-{
-    HybridBuddyTemp buddy = {
-        .account = account,
-        .id = id
-    };
-    GList *res;
-    res = g_list_find_custom(session_list, &buddy,
-                             (GCompareFunc)hybrid_buddy_comp);
-
-    return res ? (HybridChatSession*)res->data : NULL;
-}
-
 static gboolean
 _hybrid_chat_session_unref_cb(HybridChatSession *session)
 {
@@ -270,6 +227,49 @@ _hybrid_chat_session_toggle_ref_cb(gpointer data, GObject *obj,
     } else {
         _hybrid_chat_session_rm_to(session);
     }
+}
+
+static HybridChatSession*
+_hybrid_chat_session_new(HybridAccount *account, const gchar *id)
+{
+    HybridChatSession *session;
+    session = g_object_new(HYBRID_TYPE_CHAT_SESSION, NULL);
+    session->account = account;
+    session->id = g_strdup(id);
+    g_signal_emit(session,
+                  hybrid_chat_session_signals[HYBRID_CHAT_SESSION_NEW], 0);
+    g_object_add_toggle_ref(G_OBJECT(session),
+                            _hybrid_chat_session_toggle_ref_cb, NULL);
+    return session;
+}
+
+//Remove after standardize hybrid buddy
+typedef struct {
+    HybridAccount *account;
+    const gchar *id;
+} HybridBuddyTemp;
+
+static gint
+hybrid_buddy_comp(HybridChatSession *session, HybridBuddyTemp *buddy)
+{
+    if (session->account == buddy->account &&
+        !(g_strcmp0(session->id, buddy->id)))
+        return 0;
+    return 1;
+}
+
+static HybridChatSession*
+_hybrid_find_chat_session(HybridAccount *account, const gchar *id)
+{
+    HybridBuddyTemp buddy = {
+        .account = account,
+        .id = id
+    };
+    GList *res;
+    res = g_list_find_custom(session_list, &buddy,
+                             (GCompareFunc)hybrid_buddy_comp);
+
+    return res ? (HybridChatSession*)res->data : NULL;
 }
 
 HybridChatSession*
