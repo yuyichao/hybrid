@@ -62,7 +62,7 @@ static void hybrid_chat_session_filter(HybridChatSession *session,
 static GtkWidget *create_note_label(HybridChatWindow *chat);
 static void chat_window_destroy(HybridChatWindow *chat);
 static gboolean key_press_func(GtkWidget *widget, GdkEventKey *event,
-                            HybridConversation *conv);
+                               HybridConversation *conv);
 static HybridChatWindow*
 hybrid_chat_window_create(HybridChatSession *session);
 
@@ -193,10 +193,8 @@ conv_destroy_cb(GtkWidget *widget, gpointer user_data)
     /* First we should free the memory in the list of HybridChatWindow. */
     while (conv->chat_buddies) {
         pos = conv->chat_buddies;
-
         temp_chat          = (HybridChatWindow*)pos->data;
         conv->chat_buddies = g_slist_remove(conv->chat_buddies, temp_chat);
-
         chat_window_destroy(temp_chat);
     }
 
