@@ -119,7 +119,7 @@ hybrid_logs_create(HybridAccount *account, const gchar *id)
 
 gint
 hybrid_logs_write(HybridLogs *log, const gchar *name, const gchar *msg,
-                    gboolean sendout)
+                  gboolean sendout)
 {
     xmlnode *head_node;
     xmlnode *body_node;
