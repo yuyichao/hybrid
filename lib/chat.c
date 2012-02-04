@@ -522,13 +522,13 @@ hybrid_chat_session_get_filter(HybridChatSession *session, const gchar* name)
 
 guint
 hybrid_chat_session_erase_filter(HybridChatSession *session,
-                                      const gchar* name, guint mask)
+                                 const gchar* name, guint mask)
 {
     guint old;
     guint new;
-    old = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(session), name));
+    old = hybrid_chat_session_get_filter(session, name);
     new = old & ~GPOINTER_TO_UINT(mask);
-    g_object_set_data(G_OBJECT(session), name, GUINT_TO_POINTER(new));
+    hybrid_chat_session_set_filter(session, name, new);
     return new;
 }
 
