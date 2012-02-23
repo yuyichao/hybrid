@@ -25,6 +25,12 @@
 #include "preference.h"
 #include "gtkutils.h"
 
+#if GTK_CHECK_VERSION(2, 24, 0)
+#  define PREFERENCE_HAS_COMB_TEXT 1
+#else
+#  define PREFERENCE_HAS_COMB_TEXT 0
+#endif
+
 static HybridPrefWin *main_pref_window = NULL;
 
 guint bool_pref_add_entry(GtkWidget *section, guint pos,
@@ -237,6 +243,37 @@ int_pref_save(HybridPrefEntry *entry)
                             GTK_SPIN_BUTTON(entry->data)));
 }
 
+#if !PREFERENCE_HAS_COMB_TEXT
+/* Copied from gtk 2.24 */
+static void
+gtk_combo_box_text_append_text(GtkComboBox *combo_box, const gchar *text)
+{
+    GtkListStore *store;
+    GtkTreeIter iter;
+    gint text_column;
+    gint column_type;
+
+    g_return_if_fail(GTK_IS_COMBO_BOX(combo_box));
+    g_return_if_fail(text != NULL);
+
+    store = GTK_LIST_STORE(gtk_combo_box_get_model(GTK_COMBO_BOX(combo_box)));
+    g_return_if_fail (GTK_IS_LIST_STORE (store));
+
+    text_column = gtk_combo_box_get_entry_text_column(GTK_COMBO_BOX(combo_box));
+    if (gtk_combo_box_get_has_entry (GTK_COMBO_BOX (combo_box)))
+        g_return_if_fail (text_column >= 0);
+    else if (text_column < 0)
+        text_column = 0;
+
+    column_type = gtk_tree_model_get_column_type(GTK_TREE_MODEL(store),
+                                                 text_column);
+    g_return_if_fail (column_type == G_TYPE_STRING);
+
+    gtk_list_store_append (store, &iter);
+    gtk_list_store_set (store, &iter, text_column, text, -1);
+}
+#endif
+
 guint
 select_pref_add_entry(GtkWidget *section, guint pos, HybridPrefEntry *entry)
 {
@@ -253,7 +290,12 @@ select_pref_add_entry(GtkWidget *section, guint pos, HybridPrefEntry *entry)
     if (entry->tooltip)
         gtk_widget_set_tooltip_markup(label, entry->tooltip);
 
+#if PREFERENCE_HAS_COMB_TEXT
     combo = gtk_combo_box_text_new();
+#else
+    combo = gtk_combo_box_new();
+#endif
+
     if (entry->type_num == PREF_KEY_SELECT) {
         value.str = hybrid_pref_get_string(entry->win->pref, entry->key);
     } else {
